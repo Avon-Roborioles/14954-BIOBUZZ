@@ -1,0 +1,32 @@
+package org.firstinspires.ftc.teamcode.commands.teleop.intakeCommands;
+
+import com.arcrobotics.ftclib.command.CommandBase;
+import com.arcrobotics.ftclib.util.Timing;
+
+import org.firstinspires.ftc.teamcode.Subsystems.DistanceSubsystem;
+import org.firstinspires.ftc.teamcode.Subsystems.IntakeSubsystem;
+
+import java.util.concurrent.TimeUnit;
+
+public class IntakeBackToCenter extends CommandBase{
+    private IntakeSubsystem intakeServoSubsystem;
+    private DistanceSubsystem distanceSubsystem;
+    private Timing.Timer timer = new Timing.Timer(1000, TimeUnit.MILLISECONDS);
+
+    public IntakeBackToCenter(IntakeSubsystem intakeServoSubsystem, DistanceSubsystem distanceSubsystem){
+        this.intakeServoSubsystem = intakeServoSubsystem;
+        this.distanceSubsystem = distanceSubsystem;
+        addRequirements(intakeServoSubsystem);
+        timer.start();
+    }
+    @Override
+    public void execute() {
+        intakeServoSubsystem.IntakeBackToCenter();
+    }
+    public boolean isFinished(){
+        return timer.done();
+    }
+    public void end(boolean interrupted){
+        intakeServoSubsystem.stopAll();
+    }
+}
