@@ -1,13 +1,12 @@
-package org.firstinspires.ftc.teamcode.Commands;
+package org.firstinspires.ftc.teamcode.archive.Commands;
 
 import com.arcrobotics.ftclib.command.CommandBase;
-
-import org.firstinspires.ftc.teamcode.Subsystems.LobberSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.LauncherSubsystem;
 
 public class LobberCommand extends CommandBase {
-    private LobberSubsystem subsystem;
+    private LauncherSubsystem subsystem;
 
-    public LobberCommand(LobberSubsystem subsystem) {
+    public LobberCommand(LauncherSubsystem subsystem) {
         this.subsystem = subsystem;
         addRequirements(subsystem);
     }
@@ -19,5 +18,4 @@ public class LobberCommand extends CommandBase {
     public void end(boolean interrupted) {
 
     }
-
 }

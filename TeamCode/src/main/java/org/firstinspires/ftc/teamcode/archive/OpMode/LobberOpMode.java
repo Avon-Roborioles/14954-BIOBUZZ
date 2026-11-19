@@ -1,28 +1,30 @@
-package org.firstinspires.ftc.teamcode.OpMode;
+package org.firstinspires.ftc.teamcode.archive.OpMode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.linearOpMode;
-
-import com.arcrobotics.ftclib.command.CommandOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.Subsystems.LobberSubsystem;
+import org.firstinspires.ftc.teamcode.subsystems.LauncherSubsystem;
 
 @Disabled
 @TeleOp
 public class LobberOpMode extends LinearOpMode {
-    private LobberSubsystem lobber;
+    private LauncherSubsystem lobber;
 
     private DcMotorEx motor;
+    private DcMotorEx motor1;
+    private Servo servo;
+
 
     @Override
     public void runOpMode() {
-        motor = hardwareMap.get(DcMotorEx.class,"lobmotor");
+        motor = hardwareMap.get(DcMotorEx.class,"intake_motor");
+        servo = hardwareMap.get(Servo.class,"servo");
+        motor1 = hardwareMap.get(DcMotorEx.class,"launch_motor");
 
-        lobber = new LobberSubsystem(motor,500);
+        lobber = new LauncherSubsystem(motor,500);
 
         waitForStart();
 
