@@ -24,9 +24,12 @@ If you're new and you have no idea what's going on, that's normal. I wrote this 
 
 We learned the hard way that telling everyone to learn to code on their own doesn't work. Here's what does.
 
-**Sections**
+**Sections and Folders**
 
-We split the robot into sections. For example: drive, input/passthrough, launcher. Each section has its own list of jobs and the sensors needed to do them.
+We split the robot into sections, and each section has its own folder in the code:
+- `drive/`: The robot's drivetrain and movement.
+- `intake/`: Picking up and transferring game elements.
+- `launcher/`: Shooting or scoring mechanisms.
 
 **Pairs**
 
@@ -51,11 +54,16 @@ The tasks file in the repo (`tasks.md`) is our shared to-do list. It has:
 
 Notice that `done` means it works on the robot, not "I finished typing." Code that hasn't touched the robot isn't done.
 
-**The reason we do it this way:** Everyone can see what needs doing, nobody has to guess, and `blocked` gives you an official way to say "I need help" without feeling bad about it.
+**Feature Branching and Master**
 
-**Check-ins**
+We use **Feature Branching** for all work. 
+- **Each section has its own branch:** You work on a branch dedicated to your section (e.g., `feature/intake`).
+- **Pushing to Master:** When your code is ready, you push your branch and open a **Pull Request (PR)**. This merges your changes into the specific folder for your section on the `master` branch.
+- **No Direct Pushes:** Never push directly into `master`. This ensures everyone's work stays organized in their folders and gets reviewed first.
 
-Every third meeting, we stop and talk for a few minutes: what moved, what's stuck, what's next. Come with your status updated.
+**Personal tasks (TODOs)**
+
+For small things you want to remember while you're in the middle of a task—like "fix this power level" or "clean up this method"—use `// TODO:` comments in Java. Android Studio highlights these and lists them in the **TODO** window at the bottom of the screen. This keeps your personal "mental to-do list" inside the code without cluttering the main `tasks.md`.
 
 ## 3. How we learn
 
@@ -81,9 +89,9 @@ Resources: [add link to team training session / slides]
 
 **Step 2: Git and GitHub**
 
-What a repository, commit, branch, push, and pull are, and how to use them without being scared of breaking things.
+What a repository, commit, branch, push, pull, and **pull request** are, and how to use them without being scared of breaking things.
 
-**Ready when:** you can clone the repo, make a change, commit it, push it, and pull someone else's changes.
+**Ready when:** you can clone the repo, create a feature branch, make a change, commit it, push it, open a pull request, and pull someone else's changes.
 
 Resources: [add link to git training session]. The README in the repo explains our branch strategy.
 
@@ -144,9 +152,9 @@ If something doesn't work, check each link in that chain.
 
 In general:
 
-- Drive code: anything about moving the robot around, wheels, driving, path following.
-- Intake code: anything about picking things up and moving them inside the robot.
-- Launcher code: anything about aiming and shooting.
+- `drive/`: anything about moving the robot around, wheels, driving, path following.
+- `intake/`: anything about picking things up and moving them inside the robot.
+- `launcher/`: anything about aiming and shooting.
 
 Look for file and folder names that match the section.
 
@@ -172,10 +180,11 @@ The tasks file has a list of real jobs. For your first one, pick something small
 
 1. Tell your partner which task you're taking.
 2. Put your name in the Owner column and set the status to `doing`.
-3. Write the code together: the newer person types.
-4. Commit and push your work.
-5. Set the status to `needs check`.
-6. Test it on the real robot. If it works, set it to `done`. If it doesn't, ask for help or mark it `blocked`.
+3. **Create a feature branch** for your section.
+4. Write the code together **in the correct folder** (e.g., `intake/`): the newer person types.
+5. Commit and push your work to your branch, then open a Pull Request.
+6. Set the status to `needs check`.
+7. Test it on the real robot. If it works, set it to `done`. If it doesn't, ask for help or mark it `blocked`.
 
 Starter tasks live in this season's tasks file. [Link them here.]
 
