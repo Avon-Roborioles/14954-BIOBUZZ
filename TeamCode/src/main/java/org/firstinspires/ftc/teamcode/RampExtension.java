@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import java.util.TreeMap;
 
+@Autonomous(name = "Ramp Extension", group = "Linear Opmode")
 public class RampExtension {
     // Maps: shooter x (distance) -> {lowAngleDeg, lowServo, highAngleDeg, highServo}
     private final TreeMap<Integer, double[]> angleMap = new TreeMap<>();
