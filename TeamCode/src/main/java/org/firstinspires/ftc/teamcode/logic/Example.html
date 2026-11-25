@@ -1,0 +1,952 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Robot ball pipeline</title><style>
+    .iso{
+      --anatomy-page:#0b0b0b;--anatomy-card:#131313;--anatomy-text:#a3a3a3;--anatomy-strong:#e6e6e6;--anatomy-muted:#6e6e6e;
+      --anatomy-paper:#131313;--anatomy-face:#1b1b1b;--anatomy-top:#1c1c1c;
+      --anatomy-shade-0:#0f0f0f;--anatomy-shade-1:#121212;--anatomy-shade-2:#151515;--anatomy-shade-3:#181818;
+      --anatomy-lit-top:#262626;--anatomy-lit-shade:#1d1d1d;
+      --anatomy-hi:#d4d4d4;--anatomy-mid:#6a6a6a;--anatomy-lo:#3e3e3e;--anatomy-faint:#2a2a2a;--anatomy-lit:#ffffff;
+      --anatomy-halo:#050505;--anatomy-halo-opacity:.9;--anatomy-dot:#e6e6e6;
+      --anatomy-red:#ff6b6b;--anatomy-green:#6be0a0;--anatomy-blue:#6b9bff;
+      --anatomy-weight:.6px;--anatomy-ease:cubic-bezier(.32,.72,0,1);
+      --anatomy-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      --anatomy-lift:inset 0 1px 0 0 #ffffff0a,inset 0 0 0 1px #ffffff06,0 0 0 1px #00000026,0 1px 1px -.5px #00000014,0 3px 3px -1.5px #00000014,0 6px 6px -3px #00000014,0 12px 12px -6px #00000014;
+    }
+    .iso[data-theme="light"]{
+      --anatomy-page:#f2f2ef;--anatomy-card:#fbfbfa;--anatomy-text:#57575a;--anatomy-strong:#18181a;--anatomy-muted:#8c8c90;
+      --anatomy-paper:#fbfbfa;--anatomy-face:#ffffff;--anatomy-top:#ffffff;
+      --anatomy-shade-0:#dcdcd9;--anatomy-shade-1:#e5e5e2;--anatomy-shade-2:#ededea;--anatomy-shade-3:#f4f4f1;
+      --anatomy-lit-top:#ffffff;--anatomy-lit-shade:#eeeeeb;
+      --anatomy-hi:#26262a;--anatomy-mid:#8a8a8f;--anatomy-lo:#b4b4b8;--anatomy-faint:#d4d4d6;--anatomy-lit:#000000;
+      --anatomy-halo:#8a8a80;--anatomy-halo-opacity:.32;--anatomy-dot:#3a3a3e;
+      --anatomy-red:#e5484d;--anatomy-green:#30a46c;--anatomy-blue:#3e63dd;
+      --anatomy-lift:inset 0 1px 0 0 #ffffff,0 0 0 1px #0000000f,0 1px 1px -.5px #0000000a,0 3px 3px -1.5px #0000000a,0 6px 6px -3px #0000000a,0 12px 12px -6px #0000000a;
+    }
+    .iso-svg{display:block;width:100%;height:auto;overflow:visible}
+    .iso-svg path,.iso-svg circle{vector-effect:non-scaling-stroke}
+    .iso-fill{fill:var(--anatomy-paper);stroke:none}
+    .iso-solid[data-lit]>.iso-fill{fill:var(--anatomy-face)}
+    .iso-shade,.iso-top{stroke:none}
+    .iso-shade[data-shade="0"]{fill:var(--anatomy-shade-0)}
+    .iso-shade[data-shade="1"]{fill:var(--anatomy-shade-1)}
+    .iso-shade[data-shade="2"]{fill:var(--anatomy-shade-2)}
+    .iso-shade[data-shade="3"]{fill:var(--anatomy-shade-3)}
+    .iso-top{fill:var(--anatomy-top)}
+    .iso-solid[data-lit]>.iso-top{fill:var(--anatomy-lit-top)}
+    .iso-solid[data-lit]>.iso-shade{fill:var(--anatomy-lit-shade)}
+    .iso-solid[data-seamless]>.iso-shade,.iso-solid[data-seamless]>.iso-top{stroke-width:.4;stroke-linejoin:round}
+    .iso-solid[data-seamless]>.iso-shade[data-shade="0"]{stroke:var(--anatomy-shade-0)}
+    .iso-solid[data-seamless]>.iso-shade[data-shade="1"]{stroke:var(--anatomy-shade-1)}
+    .iso-solid[data-seamless]>.iso-shade[data-shade="2"]{stroke:var(--anatomy-shade-2)}
+    .iso-solid[data-seamless]>.iso-shade[data-shade="3"]{stroke:var(--anatomy-shade-3)}
+    .iso-solid[data-seamless]>.iso-top{stroke:var(--anatomy-top)}
+    .iso-solid[data-seamless][data-lit]>.iso-top{stroke:var(--anatomy-lit-top)}
+    .iso-solid[data-seamless][data-lit]>.iso-shade{stroke:var(--anatomy-lit-shade)}
+    .iso-solid[data-lit]>.iso-edge{stroke:var(--anatomy-lit)}
+    .iso-halo{fill:var(--anatomy-halo);stroke:none;filter:blur(9px);opacity:var(--anatomy-halo-opacity);transform:translateY(3px)}
+    .iso-line{fill:none;stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight);stroke-linecap:round;stroke-linejoin:round}
+    .iso-line[data-tone="hi"]{stroke:var(--anatomy-hi)}
+    .iso-line[data-tone="mid"]{stroke:var(--anatomy-mid)}
+    .iso-line[data-tone="lo"]{stroke:var(--anatomy-lo)}
+    .iso-line[data-tone="faint"]{stroke:var(--anatomy-faint)}
+    .iso-line[data-tone="lit"]{stroke:var(--anatomy-lit)}
+    .iso-line[data-tone="red"]{stroke:var(--anatomy-red)}
+    .iso-line[data-tone="green"]{stroke:var(--anatomy-green)}
+    .iso-line[data-tone="blue"]{stroke:var(--anatomy-blue)}
+    .iso-line[data-dotted]{stroke-dasharray:.01 3.5;stroke-width:1}
+    .iso-line[data-dashed]{stroke-dasharray:3 3}
+    .iso-line[data-flow]{stroke-dasharray:2 6}
+    .iso-wire-end{fill:var(--anatomy-paper);stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight)}
+    .iso-wire[data-tone="hi"] .iso-wire-end{stroke:var(--anatomy-hi)}
+    .iso-wire[data-tone="mid"] .iso-wire-end{stroke:var(--anatomy-mid)}
+    .iso-wire[data-tone="faint"] .iso-wire-end{stroke:var(--anatomy-faint)}
+    .iso-wire[data-tone="lit"] .iso-wire-end{stroke:var(--anatomy-lit)}
+    .iso-dots circle{fill:var(--anatomy-dot);stroke:none;opacity:.32}
+    .iso-dots[data-tone="hi"] circle{opacity:.85}
+    .iso-dots[data-tone="mid"] circle{opacity:.45}
+    .iso-dots[data-tone="lo"] circle{opacity:.22}
+    .iso-dots[data-tone="faint"] circle{opacity:.12}
+    .iso-face-text{fill:var(--anatomy-mid);font-family:var(--anatomy-mono);letter-spacing:.04em}
+    .iso-face-text[data-tone="hi"]{fill:var(--anatomy-hi)}
+    .iso-face-text[data-tone="lo"]{fill:var(--anatomy-lo)}
+    .iso-face-text[data-tone="faint"]{fill:var(--anatomy-faint)}
+    .tb-body{fill:var(--anatomy-shade-2);stroke:none}
+    .tb-shine{fill:var(--anatomy-top);stroke:none}
+    .tb-shade{fill:var(--anatomy-shade-0);stroke:none}
+    .tb-ring{fill:none;stroke:var(--anatomy-lo);stroke-width:.45;stroke-linecap:butt;stroke-linejoin:round}
+    .tb-ring[data-tone="mid"]{stroke:var(--anatomy-mid)}
+    .tb-ring[data-tone="faint"]{stroke:var(--anatomy-faint)}
+    .tb-ring[data-tone="hi"]{stroke:var(--anatomy-hi)}
+    @keyframes iso-flow{to{stroke-dashoffset:-32}}
+    @keyframes iso-pulse{0%,100%{opacity:.18}12%{opacity:1}40%{opacity:.18}}
+    .iso-line[data-flow]{animation:iso-flow 1600ms linear infinite}
+    .iso-dots circle[data-pulse]{animation:iso-pulse 1600ms steps(1,end) infinite;animation-delay:var(--pulse-at,0ms)}
+    .iso-figure{margin:32px 0 36px}
+    .iso-plate{position:relative;padding:52px 24px;border-radius:0;background:var(--anatomy-card);box-shadow:0 0 0 1px var(--anatomy-mid);--anatomy-paper:var(--anatomy-card)}
+    .iso-plate-corners{position:absolute;inset:18px 20px;pointer-events:none}
+    .iso-plate-corner{position:absolute;color:var(--anatomy-muted);font-family:var(--anatomy-mono);font-size:10.5px;line-height:1;letter-spacing:.04em;white-space:nowrap}
+    .iso-plate-corner[data-corner="fig"]{top:0;left:0;color:var(--anatomy-text)}
+    .iso-plate-corner[data-corner="title"]{top:0;right:0;text-transform:uppercase;letter-spacing:.1em}
+    .iso-plate-corner[data-corner="hint"]{bottom:0;left:0;text-transform:uppercase;letter-spacing:.1em}
+    .iso-plate-corner[data-corner="readout"]{right:0;bottom:0;color:var(--anatomy-text);font-variant-numeric:tabular-nums}
+    .iso-plate .iso-svg{margin:0 auto}
+    .iso-legend{display:grid;gap:8px;margin-top:12px;color:var(--anatomy-muted);font-size:13px;line-height:1.55}
+    .iso-keys{display:flex;flex-wrap:wrap;gap:6px 18px}
+    .iso-key{display:inline-flex;align-items:center;gap:7px}
+    .iso-swatch{width:16px;height:10px;flex:none;overflow:visible}
+    .iso-swatch path{fill:none;stroke:var(--anatomy-hi);stroke-width:1;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+    .iso-swatch[data-mark="raised"] path,.iso-swatch[data-mark="flat"] path{stroke:var(--anatomy-mid)}
+    .iso-swatch[data-mark="lit"] path{stroke:var(--anatomy-lit)}
+    .iso-swatch[data-mark="dim"] path{stroke:var(--anatomy-lo)}
+    .iso-swatch[data-mark="dotted"] path{stroke-dasharray:.01 3;stroke-width:1.4}
+    .iso-swatch[data-mark="dashed"] path{stroke-dasharray:3 2.5}
+    .iso-swatch[data-mark="red"] path{stroke:var(--anatomy-red)}
+    .iso-swatch[data-mark="green"] path{stroke:var(--anatomy-green)}
+    .iso-swatch[data-mark="blue"] path{stroke:var(--anatomy-blue)}
+    .iso-swatch-crease{stroke:var(--anatomy-lo)!important}
+    @media (max-width:560px){.iso-plate{padding:48px 12px 70px}.iso-plate-corner[data-corner="hint"]{bottom:18px}}
+    @media (prefers-reduced-motion:reduce){.iso-line[data-flow],.iso-dots circle[data-pulse]{animation:none}}
+
+    *{box-sizing:border-box}
+    html{color-scheme:dark}
+    body[data-theme="light"]{color-scheme:light}
+    body{margin:0;background:var(--anatomy-page);color:var(--anatomy-text);font:14px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+    .iso-page{width:min(1100px,100% - 32px);margin:64px auto 96px}
+    .rb-wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}@media(max-width:820px){.rb-wrap{grid-template-columns:1fr}}.rb-right{display:grid;gap:12px}.rb-pn{border:1px solid var(--anatomy-line,#8884);border-radius:12px;padding:10px}.rb-pn b{font-weight:500}.rb-pn i{margin-left:8px;font-style:normal;opacity:.6;font-size:12px}.rb-pn svg{display:block;width:100%;margin-top:6px}#steps{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 8px}#steps span{padding:4px 10px;border:1px solid #8884;border-radius:99px;font-size:13px;opacity:.55}#steps span[data-on="1"]{opacity:1;background:#f5c518;color:#111;border-color:#f5c518}.rb-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.rb-ctl label{display:flex;gap:8px;align-items:center;flex:1 1 220px}.rb-ctl input{flex:1}.rb-ctl+.rb-ctl{margin-top:8px}.rb-ctl button[aria-pressed="true"]{background:#f5c518;color:#111;border-color:#f5c518}.rb-ctl button:disabled{opacity:.4}.rb-ctl button{font:inherit;padding:6px 14px;margin-right:8px;border-radius:8px;border:1px solid #8886;background:transparent;color:inherit}#desc{margin:4px 0 12px}:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style></head><body class="iso" data-theme="dark"><main class="iso-page"><div class="rb-wrap"><div><figure class="iso-figure"><div class="iso-plate"><div class="iso-plate-corners" aria-hidden="true"><span class="iso-plate-corner" data-corner="fig">Fig 1</span><span class="iso-plate-corner" data-corner="title">Ball pipeline</span><span class="iso-plate-corner" data-corner="hint">Drag robot or balls in step 1</span><span class="iso-plate-corner" data-corner="readout" data-readout>scan</span></div><div class="iso-stage" role="img" aria-label="Robot pipeline"><svg xmlns="http://www.w3.org/2000/svg" class="iso-svg" viewBox="0 0 640 400" role="img" aria-label="Isometric field with a robot scanning for yellow balls, clustering them, planning a route and shooting into the goal."><path class="iso-halo" d="M90.1 227.1L90.2 226.3L90.6 225.5L91.2 224.7L92.1 224L315.2 80.7L316.2 80.1L317.4 79.7L318.7 79.4L320 79.4L321.3 79.4L322.6 79.7L323.8 80.1L324.8 80.7L547.9 224L548.8 224.7L549.4 225.5L549.8 226.3L549.9 227.1L549.9 232.4L549.8 233.3L549.4 234.1L548.8 234.8L547.9 235.5L324.8 378.9L323.8 379.4L322.6 379.8L321.3 380.1L320 380.2L318.7 380.1L317.4 379.8L316.2 379.4L315.2 378.9L92.1 235.5L91.2 234.8L90.6 234.1L90.2 233.3L90.1 232.4Z"/><g class="iso-solid"><path class="iso-fill" d="M90.1 227.1L90.3 226L91 224.9L92.1 224L315.2 80.7L316.6 80L318.2 79.5L320 79.4L321.8 79.5L323.4 80L324.8 80.7L547.9 224L549 224.9L549.7 226L549.9 227.1L549.9 232.4L549.7 233.5L549 234.6L547.9 235.5L324.8 378.9L323.4 379.6L321.8 380L320 380.2L318.2 380L316.6 379.6L315.2 378.9L92.1 235.5L91 234.6L90.3 233.5L90.1 232.4Z"/><path class="iso-shade" data-shade="0" d="M549.9 232.4L549.7 233.5L549.7 228.3L549.9 227.1ZM549.7 233.5L549 234.6L549 229.3L549.7 228.3ZM549 234.6L547.9 235.5L547.9 230.3L549 229.3ZM547.9 235.5L324.8 378.9L324.8 373.6L547.9 230.3ZM324.8 378.9L323.4 379.6L323.4 374.3L324.8 373.6Z"/><path class="iso-shade" data-shade="1" d="M323.4 379.6L321.8 380L321.8 374.8L323.4 374.3ZM321.8 380L320 380.2L320 374.9L321.8 374.8Z"/><path class="iso-shade" data-shade="2" d="M320 380.2L318.2 380L318.2 374.8L320 374.9ZM318.2 380L316.6 379.6L316.6 374.3L318.2 374.8Z"/><path class="iso-shade" data-shade="3" d="M316.6 379.6L315.2 378.9L315.2 373.6L316.6 374.3ZM315.2 378.9L92.1 235.5L92.1 230.3L315.2 373.6ZM92.1 235.5L91 234.6L91 229.3L92.1 230.3ZM91 234.6L90.3 233.5L90.3 228.3L91 229.3ZM90.3 233.5L90.1 232.4L90.1 227.1L90.3 228.3Z"/><path class="iso-top" d="M547.9 224L549 224.9L549.7 226L549.9 227.1L549.7 228.3L549 229.3L547.9 230.3L324.8 373.6L323.4 374.3L321.8 374.8L320 374.9L318.2 374.8L316.6 374.3L315.2 373.6L92.1 230.3L91 229.3L90.3 228.3L90.1 227.1L90.3 226L91 224.9L92.1 224L315.2 80.7L316.6 80L318.2 79.5L320 79.4L321.8 79.5L323.4 80L324.8 80.7Z"/><path class="iso-line iso-edge" data-tone="lo" d="M90.1 227.1L90.3 226L91 224.9L92.1 224L315.2 80.7L316.6 80L318.2 79.5L320 79.4L321.8 79.5L323.4 80L324.8 80.7L547.9 224L549 224.9L549.7 226L549.9 227.1M549.9 232.4L549.7 233.5L549 234.6L547.9 235.5L324.8 378.9L323.4 379.6L321.8 380L320 380.2L318.2 380L316.6 379.6L315.2 378.9L92.1 235.5L91 234.6L90.3 233.5L90.1 232.4M549.9 227.1L549.9 232.4M90.1 227.1L90.1 232.4"/></g><path class="iso-line" data-tone="faint" d="M358.8 102.5L126 252.1M281.2 102.5L514 252.1M397.6 127.4L164.8 277M242.4 127.4L475.2 277M436.4 152.3L203.6 301.9M203.6 152.3L436.4 301.9M475.2 177.3L242.4 326.9M164.8 177.3L397.6 326.9M514 202.2L281.2 351.8M126 202.2L358.8 351.8"/><path class="iso-line" data-tone="mid" d="M547.9 224L548.8 224.7L549.4 225.5L549.8 226.3L549.9 227.1L549.8 228L549.4 228.8L548.8 229.6L547.9 230.3L324.8 373.6L323.8 374.2L322.6 374.6L321.3 374.8L320 374.9L318.7 374.8L317.4 374.6L316.2 374.2L315.2 373.6L92.1 230.3L91.2 229.6L90.6 228.8L90.2 228L90.1 227.1L90.2 226.3L90.6 225.5L91.2 224.7L92.1 224L315.2 80.7L316.2 80.1L317.4 79.7L318.7 79.4L320 79.4L321.3 79.4L322.6 79.7L323.8 80.1L324.8 80.7Z"/><g class="iso-solid"><path class="iso-fill" d="M389.8 255.6L390.1 254.5L391.1 253.6L442.8 220.3L444.3 219.7L446.1 219.5L447.8 219.7L449.3 220.3L462.2 228.6L463.2 229.6L463.6 230.7L463.6 283.2L463.2 284.4L462.2 285.3L410.5 318.6L409 319.2L407.3 319.4L405.5 319.2L404 318.6L391.1 310.3L390.1 309.3L389.8 308.2Z"/><path class="iso-shade" data-shade="0" d="M463.6 283.2L463.2 284.4L463.2 231.8L463.6 230.7ZM463.2 284.4L462.2 285.3L462.2 232.8L463.2 231.8ZM462.2 285.3L410.5 318.6L410.5 266L462.2 232.8ZM410.5 318.6L409 319.2L409 266.7L410.5 266Z"/><path class="iso-shade" data-shade="1" d="M409 319.2L407.3 319.4L407.3 266.9L409 266.7Z"/><path class="iso-shade" data-shade="2" d="M407.3 319.4L405.5 319.2L405.5 266.7L407.3 266.9Z"/><path class="iso-shade" data-shade="3" d="M405.5 319.2L404 318.6L404 266L405.5 266.7ZM404 318.6L391.1 310.3L391.1 257.7L404 266ZM391.1 310.3L390.1 309.3L390.1 256.8L391.1 257.7ZM390.1 309.3L389.8 308.2L389.8 255.6L390.1 256.8Z"/><path class="iso-top" d="M462.2 228.6L463.2 229.6L463.6 230.7L463.2 231.8L462.2 232.8L410.5 266L409 266.7L407.3 266.9L405.5 266.7L404 266L391.1 257.7L390.1 256.8L389.8 255.6L390.1 254.5L391.1 253.6L442.8 220.3L444.3 219.7L446.1 219.5L447.8 219.7L449.3 220.3Z"/><path class="iso-line iso-crease" data-tone="lo" d="M463.6 230.7L463.2 231.8L462.2 232.8L410.5 266L409 266.7L407.3 266.9L405.5 266.7L404 266L391.1 257.7L390.1 256.8L389.8 255.6"/><path class="iso-line iso-bevel" data-tone="lo" d="M463.6 230.7L462 231.5L461.2 232.2L409.6 265.4L408.5 265.9L407.3 266L406.1 265.9L404.9 265.4L392.2 257.2L391.4 256.4L389.8 255.6"/><path class="iso-line iso-edge" data-tone="hi" d="M389.8 255.6L390.1 254.5L391.1 253.6L442.8 220.3L444.3 219.7L446.1 219.5L447.8 219.7L449.3 220.3L462.2 228.6L463.2 229.6L463.6 230.7M463.6 283.2L463.2 284.4L462.2 285.3L410.5 318.6L409 319.2L407.3 319.4L405.5 319.2L404 318.6L391.1 310.3L390.1 309.3L389.8 308.2M463.6 230.7L463.6 283.2M389.8 255.6L389.8 308.2"/></g><g class="iso-solid"><path class="iso-fill" d="M399.5 250.1L399.8 248.9L400.8 248L439.6 223.1L441.1 222.4L442.8 222.2L444.6 222.4L446.1 223.1L455.8 229.3L456.8 230.2L457.1 231.4L457.1 234.9L456.8 236L455.8 236.9L417 261.9L415.5 262.5L413.7 262.7L412 262.5L410.5 261.9L400.8 255.6L399.8 254.7L399.5 253.6Z"/><path class="iso-shade" data-shade="0" d="M457.1 234.9L456.8 236L456.8 232.5L457.1 231.4ZM456.8 236L455.8 236.9L455.8 233.4L456.8 232.5ZM455.8 236.9L417 261.9L417 258.4L455.8 233.4ZM417 261.9L415.5 262.5L415.5 259L417 258.4Z"/><path class="iso-shade" data-shade="1" d="M415.5 262.5L413.7 262.7L413.7 259.2L415.5 259Z"/><path class="iso-shade" data-shade="2" d="M413.7 262.7L412 262.5L412 259L413.7 259.2Z"/><path class="iso-shade" data-shade="3" d="M412 262.5L410.5 261.9L410.5 258.4L412 259ZM410.5 261.9L400.8 255.6L400.8 252.1L410.5 258.4ZM400.8 255.6L399.8 254.7L399.8 251.2L400.8 252.1ZM399.8 254.7L399.5 253.6L399.5 250.1L399.8 251.2Z"/><path class="iso-top" d="M455.8 229.3L456.8 230.2L457.1 231.4L456.8 232.5L455.8 233.4L417 258.4L415.5 259L413.7 259.2L412 259L410.5 258.4L400.8 252.1L399.8 251.2L399.5 250.1L399.8 248.9L400.8 248L439.6 223.1L441.1 222.4L442.8 222.2L444.6 222.4L446.1 223.1Z"/><path class="iso-line iso-crease" data-tone="faint" d="M457.1 231.4L456.8 232.5L455.8 233.4L417 258.4L415.5 259L413.7 259.2L412 259L410.5 258.4L400.8 252.1L399.8 251.2L399.5 250.1"/><path class="iso-line iso-bevel" data-tone="faint" d="M457.1 231.4L455.9 232.3L455.1 233.1L416.4 257.9L415.1 258.5L413.7 258.7L412.3 258.5L411.1 257.9L401.5 251.8L400.7 251L399.5 250.1"/><path class="iso-line iso-edge" data-tone="mid" d="M399.5 250.1L399.8 248.9L400.8 248L439.6 223.1L441.1 222.4L442.8 222.2L444.6 222.4L446.1 223.1L455.8 229.3L456.8 230.2L457.1 231.4M457.1 234.9L456.8 236L455.8 236.9L417 261.9L415.5 262.5L413.7 262.7L412 262.5L410.5 261.9L400.8 255.6L399.8 254.7L399.5 253.6M457.1 231.4L457.1 234.9M399.5 250.1L399.5 253.6"/></g><path class="iso-line" data-tone="mid" data-dashed="" d="M396 276L393.5 277.2L390.8 278.2L387.8 278.8L384.7 279L381.5 278.8L378.5 278.2L375.8 277.2L373.3 276L371.3 274.4L369.9 272.6L369 270.7L368.7 268.7L369 266.7L369.9 264.8L371.3 263L373.3 261.4L375.8 260.1L378.5 259.2L381.5 258.6L384.7 258.4L387.8 258.6L390.8 259.2L393.5 260.1L396 261.4L398 263L399.4 264.8L400.3 266.7L400.7 268.7L400.3 270.7L399.4 272.6L398 274.4Z"/><g id="dyn"></g></svg></div></div><figcaption class="iso-legend"><span class="iso-keys"><span class="iso-key"><svg class="iso-swatch" data-mark="lit" viewBox="0 0 16 10" aria-hidden="true"><path d="M2 4.5 8 1.5 14 4.5 14 6 8 9 2 6Z"/><path class="iso-swatch-crease" d="M2 4.5 8 7.5 14 4.5"/></svg>Robot camera</span><span class="iso-key"><svg class="iso-swatch" data-mark="raised" viewBox="0 0 16 10" aria-hidden="true"><path d="M2 4.5 8 1.5 14 4.5 14 6 8 9 2 6Z"/><path class="iso-swatch-crease" d="M2 4.5 8 7.5 14 4.5"/></svg>Goal</span></span><span class="iso-caption">Yellow balls are real. The graph on the right is what the robot believes after each stage.</span></figcaption></figure></div><div class="rb-right"><div class="rb-pn"><b>Camera view</b><i>what the robot sees</i><svg id="cam" viewBox="0 0 200 120"></svg></div><div class="rb-pn"><b>Live ball map</b><i>what it thinks</i><svg id="map" viewBox="0 0 160 160"></svg></div></div></div><div id="steps"></div><p id="desc"></p><div class="rb-ctl"><button id="md" aria-pressed="true">Drag scan</button><button id="ma" aria-pressed="false">Auto</button><label>Rotate <input id="hd" type="range" min="0" max="359" value="0"><span id="hv">0°</span></label></div><div class="rb-ctl"><button id="pl" aria-pressed="false" disabled>Re-place balls (0)</button><button id="rf">Refill field</button><button id="rv" aria-pressed="false">Rival robot</button><button id="ob" aria-pressed="true">Obstacles</button><button id="pp">Pause</button><button id="nx">Next step</button></div></main><script type="module">const AZIMUTH = 45;
+const ELEVATION = 30;
+const SHADES = 4;
+const RADIANS = Math.PI / 180;
+const UNIT = Math.sqrt(1.6);
+function cameraOf({ scale, azimuth = AZIMUTH, elevation = ELEVATION }) {
+    const a = azimuth * RADIANS;
+    const e = elevation * RADIANS;
+    return { sinA: Math.sin(a), cosA: Math.cos(a), sinE: Math.sin(e), cosE: Math.cos(e), k: scale * UNIT };
+}
+function iso([x, y, z], projection) {
+    const { origin } = projection;
+    const { sinA, cosA, sinE, cosE, k } = cameraOf(projection);
+    return [origin[0] + (x * sinA - y * cosA) * k, origin[1] + ((x * cosA + y * sinA) * sinE - z * cosE) * k];
+}
+function towardViewer(projection) {
+    const { sinA, cosA } = cameraOf(projection);
+    return [cosA, sinA];
+}
+function depthOf([x, y, z], projection) {
+    const { sinA, cosA, sinE, cosE } = cameraOf(projection);
+    return (x * cosA + y * sinA) * cosE + z * sinE;
+}
+const tenth = (value) => {
+    const text = (Math.round(value * 10) / 10).toFixed(1).replace(/\.0$/, "");
+    return text === "-0" ? "0" : text;
+};
+function pathOf(points, closed = false) {
+    if (!points.length)
+        return "";
+    return points.map(([x, y], at) => `${at ? "L" : "M"}${tenth(x)} ${tenth(y)}`).join("") + (closed ? "Z" : "");
+}
+const joinPaths = (paths) => paths.filter(Boolean).join("");
+function roundedPlan({ x, y, w, d, r }, steps = 8) {
+    const radius = Math.max(0, Math.min(r, w / 2, d / 2));
+    const corners = [
+        [x + w - radius, y + radius, -90],
+        [x + w - radius, y + d - radius, 0],
+        [x + radius, y + d - radius, 90],
+        [x + radius, y + radius, 180],
+    ];
+    const out = [];
+    for (const [cx, cy, start] of corners) {
+        const count = radius > 0 ? steps : 0;
+        for (let step = 0; step <= count; step++) {
+            const angle = (start + (count ? (90 * step) / count : 45)) * RADIANS;
+            out.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]);
+        }
+    }
+    return out;
+}
+function signedArea(points) {
+    let area = 0;
+    for (let index = 0; index < points.length; index++) {
+        const [ax, ay] = points[index];
+        const [bx, by] = points[(index + 1) % points.length];
+        area += ax * by - bx * ay;
+    }
+    return area / 2;
+}
+const oriented = (points) => (signedArea(points) < 0 ? [...points].reverse() : points);
+function convexHull(points) {
+    const sorted = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    if (sorted.length < 3)
+        return sorted;
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lower = [];
+    for (const point of sorted) {
+        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0)
+            lower.pop();
+        lower.push(point);
+    }
+    const upper = [];
+    for (let index = sorted.length - 1; index >= 0; index--) {
+        const point = sorted[index];
+        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0)
+            upper.pop();
+        upper.push(point);
+    }
+    return [...lower.slice(0, -1), ...upper.slice(0, -1)];
+}
+function runsOf(flags, want) {
+    const count = flags.length;
+    const runs = [];
+    const start = flags.findIndex((flag, index) => flag !== flags[(index + count - 1) % count]);
+    if (start < 0)
+        return flags[0] === want ? [Array.from({ length: count + 1 }, (_, index) => index % count)] : [];
+    let run = null;
+    for (let step = 0; step < count; step++) {
+        const index = (start + step) % count;
+        if (flags[index] === want) {
+            if (!run)
+                run = [index];
+            run.push((index + 1) % count);
+        }
+        else if (run) {
+            runs.push(run);
+            run = null;
+        }
+    }
+    if (run)
+        runs.push(run);
+    return runs;
+}
+function extrude(ring, z, height, projection, options = {}) {
+    const convex = options.convex ?? true;
+    const count = ring.length;
+    const counter = signedArea(ring) > 0;
+    const [vx, vy] = towardViewer(projection);
+    const { sinA, cosA } = cameraOf(projection);
+    const normals = ring.map(([ax, ay], index) => {
+        const [bx, by] = ring[(index + 1) % count];
+        const dx = bx - ax;
+        const dy = by - ay;
+        const length = Math.hypot(dx, dy) || 1;
+        return (counter ? [dy / length, -dx / length] : [-dy / length, dx / length]);
+    });
+    const facing = normals.map(([nx, ny]) => nx * vx + ny * vy > 1e-9);
+    const top = ring.map(([x, y]) => iso([x, y, z + height], projection));
+    const bottom = ring.map(([x, y]) => iso([x, y, z], projection));
+    const outline = [];
+    const crease = [];
+    for (const run of runsOf(facing, false))
+        outline.push(pathOf(run.map((index) => top[index])));
+    for (const run of runsOf(facing, true)) {
+        crease.push(pathOf(run.map((index) => top[index])));
+        if (height > 0)
+            outline.push(pathOf(run.map((index) => bottom[index])));
+    }
+    if (height > 0) {
+        for (let index = 0; index < count; index++) {
+            if (facing[(index + count - 1) % count] !== facing[index])
+                outline.push(pathOf([top[index], bottom[index]]));
+        }
+    }
+    let fill;
+    if (convex) {
+        fill = pathOf(convexHull([...top, ...bottom]), true);
+    }
+    else {
+        const parts = [pathOf(oriented(top), true), pathOf(oriented(bottom), true)];
+        for (let index = 0; index < count; index++) {
+            if (!facing[index])
+                continue;
+            const next = (index + 1) % count;
+            parts.push(pathOf(oriented([top[index], top[next], bottom[next], bottom[index]]), true));
+        }
+        fill = parts.join("");
+    }
+    const buckets = Array.from({ length: SHADES }, () => []);
+    if (height > 0) {
+        const [lx, ly] = [-sinA, cosA];
+        for (let index = 0; index < count; index++) {
+            if (!facing[index])
+                continue;
+            const [nx, ny] = normals[index];
+            const lit = (nx * lx + ny * ly + 1) / 2;
+            const shade = Math.min(SHADES - 1, Math.max(0, Math.floor(lit * SHADES)));
+            const next = (index + 1) % count;
+            buckets[shade].push(pathOf(oriented([top[index], top[next], bottom[next], bottom[index]]), true));
+        }
+    }
+    let bevel;
+    if (options.bevel && options.bevel > 0) {
+        const by = options.bevel;
+        const inset = ring.map(([x, y], index) => {
+            const [ax, ay] = normals[(index + count - 1) % count];
+            const [bx, by2] = normals[index];
+            const mx = ax + bx;
+            const my = ay + by2;
+            const length = Math.hypot(mx, my) || 1;
+            return [x - (mx / length) * by, y - (my / length) * by];
+        });
+        const insetTop = inset.map(([x, y]) => iso([x, y, z + height], projection));
+        bevel = runsOf(facing, true)
+            .map((run) => pathOf([top[run[0]], ...run.slice(1, -1).map((index) => insetTop[index]), top[run[run.length - 1]]]))
+            .join("");
+    }
+    return {
+        fill,
+        outline: outline.join(""),
+        crease: crease.join(""),
+        top: pathOf(oriented(top), true),
+        shades: buckets.map((paths) => paths.join("")),
+        bevel,
+    };
+}
+const ringOf = (plan, steps = 8) => roundedPlan(plan, steps);
+function slabOf(plan, z, height, projection, steps = 8, bevel = 0) {
+    return extrude(ringOf(plan, steps), z, height, projection, { convex: true, bevel });
+}
+function circleRing(cx, cy, radius, steps = 40) {
+    return Array.from({ length: steps }, (_, step) => {
+        const angle = (step / steps) * Math.PI * 2;
+        return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)];
+    });
+}
+function cylinder(cx, cy, radius, z, height, projection, steps = 32, bevel = 0) {
+    return extrude(circleRing(cx, cy, radius, steps), z, height, projection, { convex: true, bevel });
+}
+const insetPlan = ({ x, y, w, d, r }, by) => ({ x: x + by, y: y + by, w: w - by * 2, d: d - by * 2, r: Math.max(0, r - by) });
+function onTop(points, z, projection, closed = false) {
+    return pathOf(points.map(([x, y]) => iso([x, y, z], projection)), closed);
+}
+const planOutline = (plan, z, projection, steps = 8) => onTop(ringOf(plan, steps), z, projection, true);
+const lineOnTop = (from, to, z, projection) => onTop([from, to], z, projection);
+const segment = (from, to, projection) => pathOf([iso(from, projection), iso(to, projection)]);
+const rise = (at, from, to, projection) => segment([at[0], at[1], from], [at[0], at[1], to], projection);
+const ring = (cx, cy, radius, z, projection, steps = 40) => onTop(circleRing(cx, cy, radius, steps), z, projection, true);
+const pointsAt = (points, projection) => points.map((point) => iso(point, projection));
+function dotGrid(x, y, columns, rows, gap, z, projection) {
+    const dots = [];
+    for (let row = 0; row < rows; row++) {
+        for (let column = 0; column < columns; column++)
+            dots.push(iso([x + column * gap, y + row * gap, z], projection));
+    }
+    return dots;
+}
+function corners({ x, y, w, d }, inset = 0) {
+    return [
+        [x + inset, y + inset],
+        [x + w - inset, y + inset],
+        [x + inset, y + d - inset],
+        [x + w - inset, y + d - inset],
+    ];
+}
+function boxCorners({ x, y, w, d }, z0, z1) {
+    const out = [];
+    for (const px of [x, x + w])
+        for (const py of [y, y + d])
+            for (const z of [z0, z1])
+                out.push([px, py, z]);
+    return out;
+}
+function knurl(cx, cy, radius, z0, z1, count, projection, inset = 0.4) {
+    const [vx, vy] = towardViewer(projection);
+    const lines = [];
+    for (let index = 0; index < count; index++) {
+        const angle = (index / count) * Math.PI * 2;
+        const nx = Math.cos(angle);
+        const ny = Math.sin(angle);
+        if (nx * vx + ny * vy < 0.15)
+            continue;
+        lines.push(segment([cx + radius * nx, cy + radius * ny, z0 + inset], [cx + radius * nx, cy + radius * ny, z1 - inset], projection));
+    }
+    return lines.join("");
+}
+function sideArc(cx, cy, radius, z, projection, steps = 24) {
+    const [vx, vy] = towardViewer(projection);
+    const facing = Math.atan2(vy, vx);
+    const points = [];
+    for (let step = 0; step <= steps; step++) {
+        const angle = facing - Math.PI / 2 + (step / steps) * Math.PI;
+        points.push(iso([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle), z], projection));
+    }
+    return pathOf(points);
+}
+function ringSeam(ring, z, projection) {
+    const count = ring.length;
+    const counter = signedArea(ring) > 0;
+    const [vx, vy] = towardViewer(projection);
+    const facing = ring.map(([ax, ay], index) => {
+        const [bx, by] = ring[(index + 1) % count];
+        const dx = bx - ax;
+        const dy = by - ay;
+        const [nx, ny] = counter ? [dy, -dx] : [-dy, dx];
+        return nx * vx + ny * vy > 1e-9;
+    });
+    return runsOf(facing, true).map((run) => pathOf(run.map((index) => iso([ring[index][0], ring[index][1], z], projection)))).join("");
+}
+const sideSeam = (plan, z, projection, steps = 8) => ringSeam(ringOf(plan, steps), z, projection);
+function sideRing(center, radius, axis, projection, steps = 20) {
+    const [px, py, pz] = center;
+    const points = [];
+    for (let step = 0; step < steps; step++) {
+        const angle = (step / steps) * Math.PI * 2;
+        const u = radius * Math.cos(angle);
+        const v = radius * Math.sin(angle);
+        points.push(iso(axis === "x" ? [px, py + u, pz + v] : [px + u, py, pz + v], projection));
+    }
+    return pathOf(points, true);
+}
+function coil(from, to, center, radius, turns, axis, projection, perTurn = 16) {
+    const count = Math.max(1, Math.round(turns * perTurn));
+    const back = [];
+    const front = [];
+    let run = [];
+    let near = null;
+    for (let index = 0; index <= count; index++) {
+        const share = index / count;
+        const angle = share * turns * Math.PI * 2;
+        const u = radius * Math.cos(angle);
+        const v = radius * Math.sin(angle);
+        const along = from + (to - from) * share;
+        const point = axis === "x" ? [along, center[0] + u, center[1] + v] : [center[0] + u, along, center[1] + v];
+        const normal = axis === "x" ? [0, Math.cos(angle), Math.sin(angle)] : [Math.cos(angle), 0, Math.sin(angle)];
+        const facing = depthOf(normal, projection) > 0;
+        const flat = iso(point, projection);
+        if (near === null)
+            near = facing;
+        if (facing !== near) {
+            run.push(flat);
+            (near ? front : back).push(pathOf(run));
+            run = [flat];
+            near = facing;
+            continue;
+        }
+        run.push(flat);
+    }
+    if (run.length > 1)
+        (near ? front : back).push(pathOf(run));
+    return { back: back.join(""), front: front.join("") };
+}
+function topTicks(from, to, step, every, edge, z, lengths, projection, axis = "x") {
+    const minor = [];
+    const major = [];
+    const first = Math.ceil(from / step) * step;
+    for (let at = first, index = Math.round(first / step); at <= to + 1e-9; at += step, index++) {
+        const big = index % every === 0;
+        const length = big ? lengths[1] : lengths[0];
+        const a = axis === "x" ? [at, edge] : [edge, at];
+        const b = axis === "x" ? [at, edge + length] : [edge + length, at];
+        (big ? major : minor).push(lineOnTop(a, b, z, projection));
+    }
+    return { minor: minor.join(""), major: major.join("") };
+}
+function sideTicks(from, to, step, every, face, top, lengths, projection, axis = "x") {
+    const minor = [];
+    const major = [];
+    const first = Math.ceil(from / step) * step;
+    for (let at = first, index = Math.round(first / step); at <= to + 1e-9; at += step, index++) {
+        const big = index % every === 0;
+        const length = big ? lengths[1] : lengths[0];
+        const a = axis === "x" ? [at, face, top] : [face, at, top];
+        const b = axis === "x" ? [at, face, top - length] : [face, at, top - length];
+        (big ? major : minor).push(segment(a, b, projection));
+    }
+    return { minor: minor.join(""), major: major.join("") };
+}
+function radialTicks(cx, cy, radius, count, every, z, lengths, projection, from = 0, span = Math.PI * 2) {
+    const minor = [];
+    const major = [];
+    const closed = Math.abs(span - Math.PI * 2) < 1e-9;
+    const steps = closed ? count : count + 1;
+    for (let index = 0; index < steps; index++) {
+        const angle = from + (index / count) * span;
+        const big = index % every === 0;
+        const inner = radius - (big ? lengths[1] : lengths[0]);
+        const sx = Math.sin(angle);
+        const sy = -Math.cos(angle);
+        (big ? major : minor).push(lineOnTop([cx + sx * inner, cy + sy * inner], [cx + sx * radius, cy + sy * radius], z, projection));
+    }
+    return { minor: minor.join(""), major: major.join("") };
+}
+const haloOf = (plan, z, height, projection) => slabOf(plan, z, height, projection).fill;
+function axisVector(projection, [dx, dy, dz]) {
+    const origin = iso([0, 0, 0], projection);
+    const moved = iso([dx, dy, dz], projection);
+    return [moved[0] - origin[0], moved[1] - origin[1]];
+}
+const fine = (value) => Math.round(value * 100) / 100;
+function translateAlong(projection, by) {
+    const [x, y] = axisVector(projection, by);
+    return `translate(${fine(x)} ${fine(y)})`;
+}
+const thousandth = (value) => Math.round(value * 1000) / 1000;
+function axesAt(at, z, projection) {
+    const origin = iso([at[0], at[1], z], projection);
+    const along = (point) => {
+        const [px, py] = iso(point, projection);
+        return [px - origin[0], py - origin[1]];
+    };
+    return { origin, x: along([at[0] + 1, at[1], z]), y: along([at[0], at[1] + 1, z]), z: along([at[0], at[1], z + 1]) };
+}
+const matrixOf = (u, v, origin) => `matrix(${thousandth(u[0])} ${thousandth(u[1])} ${thousandth(v[0])} ${thousandth(v[1])} ${thousandth(origin[0])} ${thousandth(origin[1])})`;
+function holdStill(element, [dx, dy]) {
+    const text = dx || dy ? `translate(${-dx} ${-dy})` : "";
+    element.querySelectorAll("[data-hold]").forEach((node) => (text ? node.setAttribute("transform", text) : node.removeAttribute("transform")));
+}
+function topMatrix(at, z, projection, along = "x") {
+    const { origin, x, y } = axesAt(at, z, projection);
+    return along === "x" ? matrixOf(x, y, origin) : matrixOf([-y[0], -y[1]], x, origin);
+}
+function sideMatrix(at, z, projection, face) {
+    const { origin, x, y, z: up } = axesAt(at, z, projection);
+    const down = [-up[0], -up[1]];
+    return face === "left" ? matrixOf(x, down, origin) : matrixOf([-y[0], -y[1]], down, origin);
+}
+function screenRise(height, projection) {
+    const { cosE, k } = cameraOf(projection);
+    return height * cosE * k;
+}
+function fitProjection(points, width, height, { pad = 24, headroom = 0, azimuth = AZIMUTH, elevation = ELEVATION } = {}) {
+    const unit = { origin: [0, 0], scale: 1, azimuth, elevation };
+    const flat = points.map((point) => iso(point, unit));
+    const xs = flat.map(([x]) => x);
+    const ys = flat.map(([, y]) => y);
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    const up = Math.min(...ys);
+    const down = Math.max(...ys);
+    const scale = Math.min((width - pad * 2) / (right - left), (height - pad * 2 - headroom) / (down - up));
+    return {
+        origin: [width / 2 - ((left + right) / 2) * scale, headroom + (height - headroom) / 2 - ((up + down) / 2) * scale],
+        scale,
+        azimuth,
+        elevation,
+    };
+}
+const escape = (text) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const attrs = (pairs) => Object.entries(pairs)
+    .filter(([, value]) => value !== undefined && value !== false)
+    .map(([key, value]) => ` ${key}="${escape(String(value))}"`)
+    .join("");
+function solidSvg(paths, { tone = "hi", crease = "faint", halo = false, lit = false, flat = false, className, inner = "" } = {}) {
+    const parts = [];
+    if (halo)
+        parts.push(`<path class="iso-halo" d="${paths.fill}"/>`);
+    parts.push(`<path class="iso-fill" d="${paths.fill}"/>`);
+    if (!flat) {
+        paths.shades.forEach((d, shade) => {
+            if (d)
+                parts.push(`<path class="iso-shade" data-shade="${shade}" d="${d}"/>`);
+        });
+        parts.push(`<path class="iso-top" d="${paths.top}"/>`);
+    }
+    if (crease !== "none" && paths.crease)
+        parts.push(`<path class="iso-line iso-crease" data-tone="${crease}" d="${paths.crease}"/>`);
+    if (crease !== "none" && paths.bevel)
+        parts.push(`<path class="iso-line iso-bevel" data-tone="${crease}" d="${paths.bevel}"/>`);
+    if (inner)
+        parts.push(inner);
+    parts.push(`<path class="iso-line iso-edge" data-tone="${tone}" d="${paths.outline}"/>`);
+    return `<g${attrs({ class: className ? `iso-solid ${className}` : "iso-solid", "data-lit": lit ? "" : undefined, "data-seamless": paths.seamless ? "" : undefined })}>${parts.join("")}</g>`;
+}
+function lineSvg(d, { tone = "lo", dotted = false, dashed = false, flow = false, className, free } = {}) {
+    if (!d)
+        return "";
+    return `<path${attrs({
+        class: className ? `iso-line ${className}` : "iso-line",
+        "data-tone": tone,
+        "data-free": free === true ? "" : free || undefined,
+        "data-dotted": dotted ? "" : undefined,
+        "data-dashed": dashed ? "" : undefined,
+        "data-flow": flow ? "" : undefined,
+        d,
+    })}/>`;
+}
+function dotsSvg(points, { size = 0.5, tone = "mid", pulse = false } = {}) {
+    const dots = points
+        .map(([x, y, alpha], index) => `<circle cx="${tenth(x)}" cy="${tenth(y)}" r="${size}"${alpha !== undefined && alpha < 1 ? ` fill-opacity="${Math.max(0, alpha).toFixed(2)}"` : ""}${pulse ? ` data-pulse="" style="--pulse-at:${(index * 137) % 1600}ms"` : ""}/>`)
+        .join("");
+    return `<g class="iso-dots" data-tone="${tone}">${dots}</g>`;
+}
+function fadedSvg(list, style = {}) {
+    const groups = new Map();
+    for (const entry of list) {
+        const [d, alpha] = Array.isArray(entry) ? entry : [entry.d, entry.alpha];
+        if (!d || !(alpha > 0.02))
+            continue;
+        const level = Math.min(1, Math.round(alpha * 20) / 20);
+        groups.set(level, (groups.get(level) ?? "") + d);
+    }
+    return [...groups].map(([alpha, d]) => (alpha >= 1 ? lineSvg(d, style) : `<g opacity="${alpha.toFixed(2)}">${lineSvg(d, style)}</g>`)).join("");
+}
+function fadeLineSvg(points, { fade = [0, 0], tone = "lo", className, stops = 6 } = {}) {
+    if (points.length < 2)
+        return "";
+    const ease = (t) => t * t * (3 - 2 * t);
+    const hashOf = (text) => {
+        let hash = 2166136261;
+        for (let index = 0; index < text.length; index++)
+            hash = Math.imul(hash ^ text.charCodeAt(index), 16777619);
+        return (hash >>> 0).toString(36);
+    };
+    const lengths = [0];
+    for (let index = 1; index < points.length; index++)
+        lengths.push(lengths[index - 1] + Math.hypot(points[index][0] - points[index - 1][0], points[index][1] - points[index - 1][1]));
+    const at = (length) => {
+        let index = 1;
+        while (index < points.length - 1 && lengths[index] < length)
+            index++;
+        const span = lengths[index] - lengths[index - 1] || 1;
+        const t = Math.max(0, Math.min(1, (length - lengths[index - 1]) / span));
+        return [points[index - 1][0] + (points[index][0] - points[index - 1][0]) * t, points[index - 1][1] + (points[index][1] - points[index - 1][1]) * t];
+    };
+    const pieceOf = (from, to) => [at(from), ...points.filter((_, index) => lengths[index] > from + 1e-6 && lengths[index] < to - 1e-6), at(to)];
+    const total = lengths[lengths.length - 1];
+    if (total < 1e-6)
+        return "";
+    let [start, end] = Array.isArray(fade) ? fade : [fade, fade];
+    if (start + end > total) {
+        const share = total / (start + end);
+        start *= share;
+        end *= share;
+    }
+    const paint = `var(--anatomy-${tone})`;
+    const ramp = (piece, rising) => {
+        const d = pathOf(piece);
+        const [x1, y1] = piece[0];
+        const [x2, y2] = piece[piece.length - 1];
+        const id = `iso-fade-${hashOf(`${d}|${tone}|${rising}`)}`;
+        const marks = Array.from({ length: stops + 1 }, (_, index) => {
+            const t = index / stops;
+            const alpha = ease(rising ? t : 1 - t);
+            return `<stop offset="${t.toFixed(3)}" stop-opacity="${alpha.toFixed(3)}" style="stop-color:${paint}"/>`;
+        }).join("");
+        const gradient = `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${tenth(x1)}" y1="${tenth(y1)}" x2="${tenth(x2)}" y2="${tenth(y2)}">${marks}</linearGradient>`;
+        return `<defs>${gradient}</defs><path${attrs({ class: className ? `iso-line ${className}` : "iso-line", "data-tone": tone, "data-free": rising ? "start" : "end", d, style: `stroke:url(#${id})` })}/>`;
+    };
+    const parts = [];
+    if (start > 0.05)
+        parts.push(ramp(pieceOf(0, start), true));
+    if (total - end - start > 0.05)
+        parts.push(lineSvg(pathOf(pieceOf(start, total - end)), { tone, className }));
+    if (end > 0.05)
+        parts.push(ramp(pieceOf(total - end, total), false));
+    return `<g class="iso-fade">${parts.join("")}</g>`;
+}
+function wireSvg(from, to, { via = [], tone = "lo", dotted = false, dashed = false, flow = false, ends = "both", size = 1.2 } = {}) {
+    const d = pathOf([from, ...via, to]);
+    const end = ([x, y]) => `<circle class="iso-wire-end" cx="${tenth(x)}" cy="${tenth(y)}" r="${size}"/>`;
+    return `<g class="iso-wire" data-tone="${tone}">${lineSvg(d, { tone, dotted, dashed, flow })}${ends === "both" || ends === "from" ? end(from) : ""}${ends === "both" || ends === "to" ? end(to) : ""}</g>`;
+}
+function faceTextSvg(transform, text, { size = 3, tone = "mid", anchor = "start" } = {}) {
+    return `<text class="iso-face-text" data-tone="${tone}" transform="${transform}" font-size="${size}" text-anchor="${anchor}">${escape(text)}</text>`;
+}
+function groupSvg(children, extra = {}) {
+    return `<g${attrs(extra)}>${Array.isArray(children) ? children.join("") : children}</g>`;
+}
+function figureSvg({ width, height, label, body, standalone = false, className }) {
+    const style = standalone ? `<style>${ISO_CSS}</style>` : "";
+    return `<svg${attrs({
+        xmlns: "http://www.w3.org/2000/svg",
+        class: `iso-svg${standalone ? " iso" : ""}${className ? ` ${className}` : ""}`,
+        "data-theme": standalone || undefined,
+        viewBox: `0 0 ${width} ${height}`,
+        role: "img",
+        "aria-label": label,
+    })}>${style}${Array.isArray(body) ? body.join("") : body}</svg>`;
+}
+function swatchSvg(mark) {
+    if (mark === "raised" || mark === "flat" || mark === "lit") {
+        const body = mark === "flat" ? "M2 6.5 8 3.5 14 6.5 8 9.5Z" : "M2 4.5 8 1.5 14 4.5 14 6 8 9 2 6Z";
+        const crease = mark === "flat" ? "" : `<path class="iso-swatch-crease" d="M2 4.5 8 7.5 14 4.5"/>`;
+        return `<svg class="iso-swatch" data-mark="${mark}" viewBox="0 0 16 10" aria-hidden="true"><path d="${body}"/>${crease}</svg>`;
+    }
+    return `<svg class="iso-swatch" data-mark="${mark}" viewBox="0 0 16 10" aria-hidden="true"><path d="M1.5 5h13"/></svg>`;
+}
+function plateHtml({ fig, title, hint, readout = "", keys = [], caption, body }) {
+    const corner = (name, text, extra = "") => `<span class="iso-plate-corner" data-corner="${name}"${extra}>${escape(text)}</span>`;
+    const legend = keys.length || caption
+        ? `<figcaption class="iso-legend">${keys.length ? `<span class="iso-keys">${keys.map((key) => `<span class="iso-key">${swatchSvg(key.mark)}${escape(key.label)}</span>`).join("")}</span>` : ""}${caption ? `<span class="iso-caption">${escape(caption)}</span>` : ""}</figcaption>`
+        : "";
+    return `<figure class="iso-figure"><div class="iso-plate"><div class="iso-plate-corners" aria-hidden="true">${corner("fig", fig)}${title ? corner("title", title) : ""}${hint ? corner("hint", hint) : ""}${corner("readout", readout, " data-readout")}</div>${body}</div>${legend}</figure>`;
+}
+function pageHtml({ title, theme = "dark", body, script = "", width = 650 }) {
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(title)}</title><style>${ISO_CSS}${PAGE_CSS.replace("__WIDTH__", String(width))}</style></head><body class="iso" data-theme="${theme}"><main class="iso-page">${body}</main>${script ? `<script type="module">${script.replace(/<\/(script)/gi, "<\\/$1")}<\/script>` : ""}</body></html>`;
+}
+const PAGE_CSS = `
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body[data-theme="light"]{color-scheme:light}
+body{margin:0;background:var(--anatomy-page);color:var(--anatomy-text);font:14px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.iso-page{width:min(__WIDTH__px,100% - 32px);margin:64px auto 96px}
+`;
+const ISO_CSS = `
+.iso{
+  --anatomy-page:#0b0b0b;--anatomy-card:#131313;--anatomy-text:#a3a3a3;--anatomy-strong:#e6e6e6;--anatomy-muted:#6e6e6e;
+  --anatomy-paper:#131313;--anatomy-face:#1b1b1b;--anatomy-top:#1c1c1c;
+  --anatomy-shade-0:#0f0f0f;--anatomy-shade-1:#121212;--anatomy-shade-2:#151515;--anatomy-shade-3:#181818;
+  --anatomy-lit-top:#262626;--anatomy-lit-shade:#1d1d1d;
+  --anatomy-hi:#d4d4d4;--anatomy-mid:#6a6a6a;--anatomy-lo:#3e3e3e;--anatomy-faint:#2a2a2a;--anatomy-lit:#ffffff;
+  --anatomy-halo:#050505;--anatomy-halo-opacity:.9;--anatomy-dot:#e6e6e6;
+  --anatomy-red:#ff6b6b;--anatomy-green:#6be0a0;--anatomy-blue:#6b9bff;
+  --anatomy-weight:.6px;--anatomy-ease:cubic-bezier(.32,.72,0,1);
+  --anatomy-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --anatomy-lift:inset 0 1px 0 0 #ffffff0a,inset 0 0 0 1px #ffffff06,0 0 0 1px #00000026,0 1px 1px -.5px #00000014,0 3px 3px -1.5px #00000014,0 6px 6px -3px #00000014,0 12px 12px -6px #00000014;
+}
+.iso[data-theme="light"]{
+  --anatomy-page:#f2f2ef;--anatomy-card:#fbfbfa;--anatomy-text:#57575a;--anatomy-strong:#18181a;--anatomy-muted:#8c8c90;
+  --anatomy-paper:#fbfbfa;--anatomy-face:#ffffff;--anatomy-top:#ffffff;
+  --anatomy-shade-0:#dcdcd9;--anatomy-shade-1:#e5e5e2;--anatomy-shade-2:#ededea;--anatomy-shade-3:#f4f4f1;
+  --anatomy-lit-top:#ffffff;--anatomy-lit-shade:#eeeeeb;
+  --anatomy-hi:#26262a;--anatomy-mid:#8a8a8f;--anatomy-lo:#b4b4b8;--anatomy-faint:#d4d4d6;--anatomy-lit:#000000;
+  --anatomy-halo:#8a8a80;--anatomy-halo-opacity:.32;--anatomy-dot:#3a3a3e;
+  --anatomy-red:#e5484d;--anatomy-green:#30a46c;--anatomy-blue:#3e63dd;
+  --anatomy-lift:inset 0 1px 0 0 #ffffff,0 0 0 1px #0000000f,0 1px 1px -.5px #0000000a,0 3px 3px -1.5px #0000000a,0 6px 6px -3px #0000000a,0 12px 12px -6px #0000000a;
+}
+.iso-svg{display:block;width:100%;height:auto;overflow:visible}
+.iso-svg path,.iso-svg circle{vector-effect:non-scaling-stroke}
+.iso-fill{fill:var(--anatomy-paper);stroke:none}
+.iso-solid[data-lit]>.iso-fill{fill:var(--anatomy-face)}
+.iso-shade,.iso-top{stroke:none}
+.iso-shade[data-shade="0"]{fill:var(--anatomy-shade-0)}
+.iso-shade[data-shade="1"]{fill:var(--anatomy-shade-1)}
+.iso-shade[data-shade="2"]{fill:var(--anatomy-shade-2)}
+.iso-shade[data-shade="3"]{fill:var(--anatomy-shade-3)}
+.iso-top{fill:var(--anatomy-top)}
+.iso-solid[data-lit]>.iso-top{fill:var(--anatomy-lit-top)}
+.iso-solid[data-lit]>.iso-shade{fill:var(--anatomy-lit-shade)}
+.iso-solid[data-seamless]>.iso-shade,.iso-solid[data-seamless]>.iso-top{stroke-width:.4;stroke-linejoin:round}
+.iso-solid[data-seamless]>.iso-shade[data-shade="0"]{stroke:var(--anatomy-shade-0)}
+.iso-solid[data-seamless]>.iso-shade[data-shade="1"]{stroke:var(--anatomy-shade-1)}
+.iso-solid[data-seamless]>.iso-shade[data-shade="2"]{stroke:var(--anatomy-shade-2)}
+.iso-solid[data-seamless]>.iso-shade[data-shade="3"]{stroke:var(--anatomy-shade-3)}
+.iso-solid[data-seamless]>.iso-top{stroke:var(--anatomy-top)}
+.iso-solid[data-seamless][data-lit]>.iso-top{stroke:var(--anatomy-lit-top)}
+.iso-solid[data-seamless][data-lit]>.iso-shade{stroke:var(--anatomy-lit-shade)}
+.iso-solid[data-lit]>.iso-edge{stroke:var(--anatomy-lit)}
+.iso-halo{fill:var(--anatomy-halo);stroke:none;filter:blur(9px);opacity:var(--anatomy-halo-opacity);transform:translateY(3px)}
+.iso-line{fill:none;stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight);stroke-linecap:round;stroke-linejoin:round}
+.iso-line[data-tone="hi"]{stroke:var(--anatomy-hi)}
+.iso-line[data-tone="mid"]{stroke:var(--anatomy-mid)}
+.iso-line[data-tone="lo"]{stroke:var(--anatomy-lo)}
+.iso-line[data-tone="faint"]{stroke:var(--anatomy-faint)}
+.iso-line[data-tone="lit"]{stroke:var(--anatomy-lit)}
+.iso-line[data-tone="red"]{stroke:var(--anatomy-red)}
+.iso-line[data-tone="green"]{stroke:var(--anatomy-green)}
+.iso-line[data-tone="blue"]{stroke:var(--anatomy-blue)}
+.iso-line[data-dotted]{stroke-dasharray:.01 3.5;stroke-width:1}
+.iso-line[data-dashed]{stroke-dasharray:3 3}
+.iso-line[data-flow]{stroke-dasharray:2 6}
+.iso-wire-end{fill:var(--anatomy-paper);stroke:var(--anatomy-lo);stroke-width:var(--anatomy-weight)}
+.iso-wire[data-tone="hi"] .iso-wire-end{stroke:var(--anatomy-hi)}
+.iso-wire[data-tone="mid"] .iso-wire-end{stroke:var(--anatomy-mid)}
+.iso-wire[data-tone="faint"] .iso-wire-end{stroke:var(--anatomy-faint)}
+.iso-wire[data-tone="lit"] .iso-wire-end{stroke:var(--anatomy-lit)}
+.iso-dots circle{fill:var(--anatomy-dot);stroke:none;opacity:.32}
+.iso-dots[data-tone="hi"] circle{opacity:.85}
+.iso-dots[data-tone="mid"] circle{opacity:.45}
+.iso-dots[data-tone="lo"] circle{opacity:.22}
+.iso-dots[data-tone="faint"] circle{opacity:.12}
+.iso-face-text{fill:var(--anatomy-mid);font-family:var(--anatomy-mono);letter-spacing:.04em}
+.iso-face-text[data-tone="hi"]{fill:var(--anatomy-hi)}
+.iso-face-text[data-tone="lo"]{fill:var(--anatomy-lo)}
+.iso-face-text[data-tone="faint"]{fill:var(--anatomy-faint)}
+.tb-body{fill:var(--anatomy-shade-2);stroke:none}
+.tb-shine{fill:var(--anatomy-top);stroke:none}
+.tb-shade{fill:var(--anatomy-shade-0);stroke:none}
+.tb-ring{fill:none;stroke:var(--anatomy-lo);stroke-width:.45;stroke-linecap:butt;stroke-linejoin:round}
+.tb-ring[data-tone="mid"]{stroke:var(--anatomy-mid)}
+.tb-ring[data-tone="faint"]{stroke:var(--anatomy-faint)}
+.tb-ring[data-tone="hi"]{stroke:var(--anatomy-hi)}
+@keyframes iso-flow{to{stroke-dashoffset:-32}}
+@keyframes iso-pulse{0%,100%{opacity:.18}12%{opacity:1}40%{opacity:.18}}
+.iso-line[data-flow]{animation:iso-flow 1600ms linear infinite}
+.iso-dots circle[data-pulse]{animation:iso-pulse 1600ms steps(1,end) infinite;animation-delay:var(--pulse-at,0ms)}
+.iso-figure{margin:32px 0 36px}
+.iso-plate{position:relative;padding:52px 24px;border-radius:0;background:var(--anatomy-card);box-shadow:0 0 0 1px var(--anatomy-mid);--anatomy-paper:var(--anatomy-card)}
+.iso-plate-corners{position:absolute;inset:18px 20px;pointer-events:none}
+.iso-plate-corner{position:absolute;color:var(--anatomy-muted);font-family:var(--anatomy-mono);font-size:10.5px;line-height:1;letter-spacing:.04em;white-space:nowrap}
+.iso-plate-corner[data-corner="fig"]{top:0;left:0;color:var(--anatomy-text)}
+.iso-plate-corner[data-corner="title"]{top:0;right:0;text-transform:uppercase;letter-spacing:.1em}
+.iso-plate-corner[data-corner="hint"]{bottom:0;left:0;text-transform:uppercase;letter-spacing:.1em}
+.iso-plate-corner[data-corner="readout"]{right:0;bottom:0;color:var(--anatomy-text);font-variant-numeric:tabular-nums}
+.iso-plate .iso-svg{margin:0 auto}
+.iso-legend{display:grid;gap:8px;margin-top:12px;color:var(--anatomy-muted);font-size:13px;line-height:1.55}
+.iso-keys{display:flex;flex-wrap:wrap;gap:6px 18px}
+.iso-key{display:inline-flex;align-items:center;gap:7px}
+.iso-swatch{width:16px;height:10px;flex:none;overflow:visible}
+.iso-swatch path{fill:none;stroke:var(--anatomy-hi);stroke-width:1;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+.iso-swatch[data-mark="raised"] path,.iso-swatch[data-mark="flat"] path{stroke:var(--anatomy-mid)}
+.iso-swatch[data-mark="lit"] path{stroke:var(--anatomy-lit)}
+.iso-swatch[data-mark="dim"] path{stroke:var(--anatomy-lo)}
+.iso-swatch[data-mark="dotted"] path{stroke-dasharray:.01 3;stroke-width:1.4}
+.iso-swatch[data-mark="dashed"] path{stroke-dasharray:3 2.5}
+.iso-swatch[data-mark="red"] path{stroke:var(--anatomy-red)}
+.iso-swatch[data-mark="green"] path{stroke:var(--anatomy-green)}
+.iso-swatch[data-mark="blue"] path{stroke:var(--anatomy-blue)}
+.iso-swatch-crease{stroke:var(--anatomy-lo)!important}
+@media (max-width:560px){.iso-plate{padding:48px 12px 70px}.iso-plate-corner[data-corner="hint"]{bottom:18px}}
+@media (prefers-reduced-motion:reduce){.iso-line[data-flow],.iso-dots circle[data-pulse]{animation:none}}
+`;
+
+const P={"origin":[320,77.53437099059231],"scale":1.8070696608556946,"azimuth":45,"elevation":40};const F=144;
+document.body.dataset.theme=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";
+const FOV=0.62,RANGE=70,CAP=4,MERGE=10,CL=24,TURN=8,SHOOT={x:112,y:72},GOAL={x:138,y:72},Y="#f5c518";
+let seed=11;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;
+const gauss=()=>Math.sqrt(-2*Math.log(rnd()+1e-9))*Math.cos(6.2832*rnd());
+const wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
+const NAMES=["Scan","Map","Group","Pick","Route","Drive","Shoot"];
+const DESC=["Drag the robot and turn it with the slider. The Limelight maps every ball inside its field of view. Press Next step when you have seen some.","Each detection is placed on the field. Detections within 10 in of a known ball merge into one averaged point.","Balls within 24 in of each other form a cluster, so one trip can collect several.","Score each cluster as size over travel distance, then take balls until the intake holds 4.","2-opt reorders the picks to cut driving and turning, ending at the shooting spot.","PedroPathing builds a Bezier curve to each ball and the follower tracks it, heading along the tangent. Each ball leaves the map when it is intaked.","At the shooting spot the hood angle and RPM come from the lookup table, then every ball is fired."];
+const DUR=[0,1.4,2,1.8,2.4,0,2.8];
+let truth,map,clusters,pick,route,flying,bot,st,t,sweep,held,dets,wp,paused=false,skip=false,mode="drag",placing=false,bag=0,clock=0,scanT=0,searchT=0,replanT=0,replans=0,stallT=0,bump=0,zones=[],path=null,vel={x:0,y:0},rival={x:122,y:122,h:3.14,tgt:null,vx:0,vy:0},rivalOn=false,obsOn=true,pushes=0;
+const OBS=[{x:56,y:52,r:8},{x:82,y:96,r:8},{x:44,y:104,r:7},{x:96,y:44,r:7}],okp=p=>!obsOn||OBS.every(o=>Math.hypot(o.x-p[0],o.y-p[1])>o.r+18),fresh=e=>clock-e.ts<0.5,usable=e=>fresh(e)&&!(e.skip>clock)&&!(rivalOn&&dist(rival,e)<dist(bot,e)*0.85),pool0=()=>mode==="auto"?map.filter(usable):map,fo=e=>mode==="auto"?(fresh(e)?0.9:0.2):0.6;
+function spawn(){truth=[];while(truth.length<10){const p=[16+rnd()*(F-62),14+rnd()*(F-28)];if(okp(p)&&truth.every(q=>Math.hypot(q[0]-p[0],q[1]-p[1])>16))truth.push(p);}zones=[];for(let i=0;i<3;i++){const b=truth[Math.floor(rnd()*truth.length)];zones.push({x:b[0]+(rnd()-0.5)*16,y:Math.max(10,Math.min(F-10,b[1]+(rnd()-0.5)*16)),w:2});}}
+function afterShot(){path=null;vel={x:0,y:0};replans=0;scanT=0;searchT=0;map=[];clusters=[];pick=[];route=[];flying=[];wp=[];st=0;t=0;sweep=0;}
+function reset(){spawn();map=[];clusters=[];pick=[];route=[];flying=[];held=0;st=0;t=0;sweep=0;if(!bot)bot={x:22,y:22,h:0};}
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function see(){dets=[];for(const [x,y] of truth){const dx=x-bot.x,dy=y-bot.y,d=Math.hypot(dx,dy),b=wrap(Math.atan2(dy,dx)-bot.h);if(d<RANGE&&d>6&&Math.abs(b)<FOV)dets.push({x,y,d,b});}}
+function measure(){for(const o of dets){const s=0.5+0.03*o.d,mx=o.x+gauss()*s,my=o.y+gauss()*s;let m=map.find(e=>Math.hypot(e.x-mx,e.y-my)<MERGE);if(m){m.x=(m.x*m.n+mx)/(m.n+1);m.y=(m.y*m.n+my)/(m.n+1);m.n++;m.ts=clock;}else map.push({x:mx,y:my,n:1,ts:clock});}}
+function group(p=pool0()){const seen=new Set();clusters=[];for(const a of p){if(seen.has(a))continue;const c=[a],q=[a];seen.add(a);while(q.length){const u=q.pop();for(const v of p)if(!seen.has(v)&&dist(u,v)<CL){seen.add(v);c.push(v);q.push(v);}}clusters.push({m:c,x:c.reduce((s,e)=>s+e.x,0)/c.length,y:c.reduce((s,e)=>s+e.y,0)/c.length,r:Math.max(...c.map(e=>Math.hypot(e.x-c.reduce((s,f)=>s+f.x,0)/c.length,e.y-c.reduce((s,f)=>s+f.y,0)/c.length)))+8});}}
+function choose(k=CAP){const cs=[...clusters].sort((a,b)=>b.m.length/(dist(bot,b)+12)-a.m.length/(dist(bot,a)+12));pick=[];for(const c of cs){for(const e of [...c.m].sort((a,b)=>dist(bot,a)-dist(bot,b))){if(pick.length<k)pick.push(e);}}}
+function cost(o){let c=0,x=bot.x,y=bot.y,h=bot.h;for(const p of [...o,SHOOT]){const d=Math.hypot(p.x-x,p.y-y),nh=Math.atan2(p.y-y,p.x-x);c+=d+TURN*Math.abs(wrap(nh-h));x=p.x;y=p.y;h=nh;}return c;}
+function plan(){let left=[...pick],o=[],cur=bot;while(left.length){left.sort((a,b)=>dist(cur,a)-dist(cur,b));cur=left.shift();o.push(cur);}let bc=cost(o),imp=true;while(imp){imp=false;for(let i=0;i<o.length-1;i++)for(let j=i+1;j<o.length;j++){const c=[...o.slice(0,i),...o.slice(i,j+1).reverse(),...o.slice(j+1)],cc=cost(c);if(cc<bc-1e-6){o=c;bc=cc;imp=true;}}}route=o;wp=[...o];}
+function enter(n){st=n;t=0;if(n===5)path=null;if(n===2)group();if(n===3)choose();if(n===4)plan();if(n===6){flying=Array.from({length:held},(_,i)=>({i,t:-i*0.35}));bag+=held;held=0;}}
+const bez=(P,t)=>{const u=1-t;return{x:u*u*u*P[0].x+3*u*u*t*P[1].x+3*u*t*t*P[2].x+t*t*t*P[3].x,y:u*u*u*P[0].y+3*u*u*t*P[1].y+3*u*t*t*P[2].y+t*t*t*P[3].y};};
+const dbez=(P,t)=>{const u=1-t;return{x:3*u*u*(P[1].x-P[0].x)+6*u*t*(P[2].x-P[1].x)+3*t*t*(P[3].x-P[2].x),y:3*u*u*(P[1].y-P[0].y)+6*u*t*(P[2].y-P[1].y)+3*t*t*(P[3].y-P[2].y)};};
+function curveP(a,b,h){const d=dist(a,b),k=Math.min(25,d*0.4),ang=Math.atan2(b.y-a.y,b.x-a.x),k1=k*(0.3+0.7*Math.max(0,Math.cos(wrap(ang-h)))),cl=v=>Math.max(6,Math.min(F-6,v));return[{x:a.x,y:a.y},{x:cl(a.x+Math.cos(h)*k1),y:cl(a.y+Math.sin(h)*k1)},{x:cl(b.x-Math.cos(ang)*k),y:cl(b.y-Math.sin(ang)*k)},{x:b.x,y:b.y}];}
+function mkPath(w){const P=curveP(bot,w,bump>0?Math.atan2(w.y-bot.y,w.x-bot.x):bot.h);let len=0,pq=P[0];for(let i=1;i<=20;i++){const q=bez(P,i/20);len+=Math.hypot(q.x-pq.x,q.y-pq.y);pq=q;}return{P,target:w,t:0,len};}
+const pathPts=pa=>Array.from({length:21},(_,i)=>{const q=bez(pa.P,i/20);return[q.x,q.y];});
+function chainPts(list){const out=[],L=obsList(false);let h=bot.h,a=bot;for(const b of [...list,SHOOT]){const v=avoid(a,b,L);for(const c of v===b?[b]:[v,b]){const P=curveP(a,c,h);for(let i=0;i<=16;i++){const q=bez(P,i/16);out.push([q.x,q.y]);}h=Math.atan2(c.y-a.y,c.x-a.x);a=c;}}return out;}
+function follow(w0,dt){
+ const w=avoid(bot,w0,obsList(false)),via=w!==w0;if(bump>0.35)path=null;
+ if(!path||dist(path.P[3],w)>3)path=mkPath(w);
+ let bt=path.t,bd=1e9;for(let i=0;i<=20;i++){const tt=Math.min(1,path.t+i*0.02),q=bez(path.P,tt),d=Math.hypot(q.x-bot.x,q.y-bot.y);if(d<bd){bd=d;bt=tt;}}path.t=bt;
+ const q=bez(path.P,bt),tg=dbez(path.P,bt),tl=Math.hypot(tg.x,tg.y)||1,rem=(1-bt)*path.len;
+ let vx,vy;
+ if(bt>=0.995){if(!via&&dist(bot,w)<2.5){vx=0;vy=0;}else{vx=(w.x-bot.x)*3;vy=(w.y-bot.y)*3;}}
+ else{const sp=via?46:Math.min(46,Math.max(10,rem*3.2));vx=tg.x/tl*sp+(q.x-bot.x)*4;vy=tg.y/tl*sp+(q.y-bot.y)*4;}
+ const ax=vx-vel.x,ay=vy-vel.y,am=Math.hypot(ax,ay),mxa=140*dt;if(am>mxa){vx=vel.x+ax/am*mxa;vy=vel.y+ay/am*mxa;}
+ vel={x:vx,y:vy};bot.x=Math.max(8,Math.min(F-8,bot.x+vx*dt));bot.y=Math.max(8,Math.min(F-8,bot.y+vy*dt));
+ const e=wrap(Math.atan2(tg.y,tg.x)-bot.h);bot.h=wrap(bot.h+Math.max(-4*dt,Math.min(4*dt,e)));}
+function addBall(){for(let n=0;n<40;n++){const p=[16+rnd()*(F-62),14+rnd()*(F-28)];if(okp(p)&&truth.every(q=>Math.hypot(q[0]-p[0],q[1]-p[1])>12)){truth.push(p);return;}}}
+function moveRival(dt){let tg=rival.tgt;if(!tg||!truth.includes(tg)){tg=null;let bd=1e9;for(const q of truth){const d=Math.hypot(q[0]-rival.x,q[1]-rival.y),db=Math.hypot(q[0]-bot.x,q[1]-bot.y),sc=d+(d>db?40:0);if(sc<bd){bd=sc;tg=q;}}rival.tgt=tg;}
+ if(!tg)return;const av=avoid(rival,{x:tg[0],y:tg[1]},obsList(true)),e=wrap(Math.atan2(av.y-rival.y,av.x-rival.x)-rival.h);rival.h+=Math.max(-2.5*dt,Math.min(2.5*dt,e));if(Math.abs(e)<0.7){const v=Math.min(30*dt,Math.hypot(av.x-rival.x,av.y-rival.y));rival.x+=Math.cos(rival.h)*v;rival.y+=Math.sin(rival.h)*v;rival.vx=Math.cos(rival.h)*30;rival.vy=Math.sin(rival.h)*30;}else{rival.vx=0;rival.vy=0;}
+ if(Math.hypot(tg[0]-rival.x,tg[1]-rival.y)<5){truth.splice(truth.indexOf(tg),1);rival.tgt=null;addBall();}}
+function obsList(forRival){const L=[];if(obsOn)for(const o of OBS)L.push({x:o.x,y:o.y,R:o.r+14});if(forRival)L.push({x:bot.x,y:bot.y,R:26});else if(rivalOn){L.push({x:rival.x,y:rival.y,R:26});if(rival.vx||rival.vy)L.push({x:rival.x+rival.vx*0.6,y:rival.y+rival.vy*0.6,R:26});}return L;}
+function avoid(a,w,L,depth=0){
+ if(depth>2)return w;let best=null,bu=2;const dx=w.x-a.x,dy=w.y-a.y,l2=dx*dx+dy*dy||1;
+ for(const c of L){const u=((c.x-a.x)*dx+(c.y-a.y)*dy)/l2;if(u<=0||u>=1)continue;const d=Math.hypot(c.x-(a.x+dx*u),c.y-(a.y+dy*u));
+  if(d<c.R&&Math.hypot(c.x-a.x,c.y-a.y)>c.R*0.85&&Math.hypot(c.x-w.x,c.y-w.y)>c.R*0.6&&u<bu){bu=u;best=c;}}
+ if(!best)return w;
+ const da=Math.hypot(best.x-a.x,best.y-a.y),a0=Math.atan2(best.y-a.y,best.x-a.x),Rr=best.R+3,th=Math.asin(Math.min(0.99,Rr/da)),left=((best.x-a.x)*(-dy)+(best.y-a.y)*dx)>0,dir=a0+(left?-th:th),len=Math.sqrt(Math.max(0,da*da-Rr*Rr))+8;
+ const via={x:Math.max(8,Math.min(F-8,a.x+Math.cos(dir)*len)),y:Math.max(8,Math.min(F-8,a.y+Math.sin(dir)*len))};
+ return avoid(a,via,L,depth+1);}
+function pushOut(b){if(!obsOn)return;for(const o of OBS){const dx=b.x-o.x,dy=b.y-o.y,d=Math.hypot(dx,dy)||1,m=o.r+11;if(d<m){b.x=o.x+dx/d*m;b.y=o.y+dy/d*m;pushes++;if(b===bot)bump=0.4;}}}
+function resolve(){pushOut(bot);if(rivalOn){pushOut(rival);const dx=bot.x-rival.x,dy=bot.y-rival.y,d=Math.hypot(dx,dy)||1;if(d<22){const k=22-d;bot.x+=dx/d*k;bot.y+=dy/d*k;pushes++;bump=0.4;}}}
+function learn(x,y){const z=zones.find(q=>Math.hypot(q.x-x,q.y-y)<30);if(z){z.x+=(x-z.x)*0.2;z.y+=(y-z.y)*0.2;z.w=Math.min(3,z.w+0.4);}else{zones.push({x:Math.max(10,Math.min(F-10,x)),y:Math.max(10,Math.min(F-10,y)),w:1});if(zones.length>6){zones.sort((a,b)=>a.w-b.w);zones.shift();}}}
+function age(){for(let i=map.length-1;i>=0;i--){const e=map[i];if(clock-e.ts>2.5){learn(e.x,e.y);map.splice(i,1);}}}
+function steer(w,dt){const e=wrap(Math.atan2(w.y-bot.y,w.x-bot.x)-bot.h);bot.h+=Math.max(-3*dt,Math.min(3*dt,e));if(Math.abs(e)<0.6){const v=Math.min(46*dt,dist(bot,w));bot.x+=Math.cos(bot.h)*v;bot.y+=Math.sin(bot.h)*v;}bot.x=Math.max(8,Math.min(F-8,bot.x));bot.y=Math.max(8,Math.min(F-8,bot.y));}
+const CENTER={x:72,y:72};
+function zoneTarget(){if(!zones.length)return CENTER;const z=[...zones].sort((a,b)=>b.w/(dist(bot,b)+20)-a.w/(dist(bot,a)+20))[0];if(dist(bot,z)<12&&!dets.length)z.w*=0.5;if(z.w<0.15)zones.splice(zones.indexOf(z),1);return z;}
+function collect(b){const i=truth.findIndex(q=>Math.hypot(q[0]-b.x,q[1]-b.y)<10);if(i>=0){truth.splice(i,1);held++;}const j=map.indexOf(b);if(j>=0)map.splice(j,1);}
+function step(dt){
+ clock+=dt;bump=Math.max(0,bump-dt);if(rivalOn)moveRival(dt);const auto=mode==="auto";
+ if(auto&&st<=5){see();if(Math.random()<0.5)measure();age();}
+ if(st===0){
+  if(!auto){see();if(Math.random()<0.3)measure();if(skip&&map.length)enter(1);}
+  else{scanT+=dt;const fr=map.filter(fresh);if(fr.length&&(scanT>0.5||skip))enter(1);else if(!fr.length&&truth.length)follow(zoneTarget(),dt);}
+ }else if(st===5){
+  if(!auto){see();const w=wp[0]||SHOOT;follow(w,dt);if(wp.length&&dist(bot,w)<5)collect(wp.shift());if(!wp.length&&dist(bot,SHOOT)<5||skip)enter(6);}
+  else{replanT+=dt;
+   if(replanT>0.3){replanT=0;const fr=pool0(),need=Math.max(0,CAP-held);wp=wp.filter(e=>map.includes(e)&&usable(e));
+    const extra=fr.filter(e=>!wp.includes(e)).sort((a,b)=>dist(bot,a)-dist(bot,b));
+    if(need&&extra.length&&(wp.length<need||dist(bot,extra[0])<dist(bot,wp[0])*0.7)){group(fr);choose(need);plan();replans++;}}
+   let w=wp[0];
+   if(!w){if(held>=CAP||(held>0&&searchT>2.2))w=SHOOT;else{w=zoneTarget();searchT+=dt;}}else searchT=0;
+   follow(w,dt);
+   if(wp[0]&&Math.hypot(vel.x,vel.y)<8&&dist(bot,w)>8)stallT+=dt;else stallT=0;if(stallT>1.2){if(wp[0]){wp[0].skip=clock+4;wp.shift();}stallT=0;}
+   if(w===wp[0]&&dist(bot,w)<5)collect(wp.shift());
+   if((w===SHOOT&&dist(bot,SHOOT)<5)||(skip&&held))enter(6);
+   if(!truth.length&&!held&&!wp.length)afterShot();}
+ }else{t+=dt;see();if(st===6)for(const f of flying)f.t+=dt;if(t>=DUR[st]*(st===6||!auto?1:0.25)||skip){if(st===6)afterShot();else enter(st+1);}}
+ resolve();skip=false;}
+const stage=document.querySelector(".iso-stage"),dyn=document.getElementById("dyn"),cam=document.getElementById("cam"),mp=document.getElementById("map");
+const steps=document.getElementById("steps"),desc=document.getElementById("desc"),ro=document.querySelector("[data-readout]");
+steps.innerHTML=NAMES.map((n,i)=>'<span data-i="'+i+'">'+(i+1)+" "+n+"</span>").join("");
+const T="var(--anatomy-text)";
+const fl=(pts,z)=>pathOf(pts.map(p=>iso([p[0],p[1],z],P)));
+function rot(cx,cy,h,pts){const c=Math.cos(h),s=Math.sin(h);return pts.map(([a,b])=>[cx+a*c-b*s,cy+a*s+b*c]);}
+function draw3d(){let s="";
+ const a0=bot.h-FOV,a1=bot.h+FOV;
+ s+='<path d="'+pathOf([[bot.x,bot.y],[bot.x+Math.cos(a0)*RANGE,bot.y+Math.sin(a0)*RANGE],[bot.x+Math.cos(a1)*RANGE,bot.y+Math.sin(a1)*RANGE]].map(p=>iso([p[0],p[1],0.3],P)),true)+'" fill="'+T+'" fill-opacity=".07" stroke="'+T+'" stroke-opacity=".35" stroke-width=".8"/>';
+ if(st===0&&mode==="drag")s+='<path d="'+ring(bot.x,bot.y,15,0.6,P,32)+'" fill="'+T+'" fill-opacity=".08" stroke="'+T+'" stroke-width="1.4" stroke-dasharray="3 3"/>';
+ if(rivalOn)s+='<path d="'+ring(rival.x,rival.y,24,0.3,P,28)+'" fill="none" stroke="'+T+'" stroke-opacity=".35" stroke-dasharray="3 3"/>';
+ if(st>=2&&st<=5)for(const c of clusters)s+='<path d="'+ring(c.x,c.y,c.r,0.3,P,40)+'" fill="none" stroke="'+T+'" stroke-opacity=".7" stroke-width="1" stroke-dasharray="4 3"/>';
+ if(st>=3)for(const e of pick)s+='<path d="'+ring(e.x,e.y,6,0.4,P,20)+'" fill="none" stroke="'+Y+'" stroke-width="1.6"/>';
+ if(st>=4&&st<=5){s+='<path d="'+fl(chainPts(st===5?wp:route),0.5)+'" fill="none" stroke="'+Y+'" stroke-width="1.6" stroke-dasharray="5 3"/>';}
+ if(path&&(st===5||st===0))s+='<path d="'+fl(pathPts(path),0.6)+'" fill="none" stroke="'+Y+'" stroke-width="2.6"/>';
+ if(mode==="auto")for(const z of zones)s+='<path d="'+ring(z.x,z.y,14,0.2,P,24)+'" fill="none" stroke="'+T+'" stroke-opacity="'+0.15*Math.min(z.w,2.5)+'" stroke-dasharray="2 4"/>';
+ for(const e of map)s+='<path d="'+ring(e.x,e.y,4.6,0.2,P,16)+'" fill="none" stroke="'+T+'" stroke-opacity="'+fo(e)+'" stroke-width=".9"/>';
+ const items=truth.map(q=>({d:depthOf([q[0],q[1],0],P),ball:q}));items.push({d:depthOf([bot.x,bot.y,0],P),bot:1});if(obsOn)for(const o of OBS)items.push({d:depthOf([o.x,o.y,0],P),ob:o});if(rivalOn)items.push({d:depthOf([rival.x,rival.y,0],P),rv:1});
+ for(const f of flying)if(f.t>0&&f.t<1.4){const u=f.t/1.4;items.push({d:-1e9,fly:[SHOOT.x+(GOAL.x-SHOOT.x)*u,SHOOT.y+(GOAL.y-SHOOT.y)*u,12+46*4*u*(1-u)]});}
+ items.sort((a,b)=>a.d-b.d);
+ for(const it of items){
+  if(it.ball){const [x,y]=it.ball,[sx,sy]=iso([x,y,3.5],P);s+='<circle cx="'+sx+'" cy="'+sy+'" r="'+3.5*P.scale+'" fill="'+Y+'"/><circle cx="'+(sx-1)+'" cy="'+(sy-1.2)+'" r="'+1.1*P.scale+'" fill="#fff" fill-opacity=".55"/>';}
+  else if(it.ob){s+=solidSvg(extrude(Array.from({length:18},(_,i)=>[it.ob.x+it.ob.r*Math.cos(i/18*6.2832),it.ob.y+it.ob.r*Math.sin(i/18*6.2832)]),2,14,P,{}),{tone:"mid",crease:"lo"});}
+  else if(it.rv){s+=solidSvg(extrude(rot(rival.x,rival.y,rival.h,[[-8,-8],[8,-8],[8,8],[-8,8]]),2,8,P,{}),{tone:"lo",crease:"hi"});}
+  else if(it.fly){const [sx,sy]=iso(it.fly,P);s+='<circle cx="'+sx+'" cy="'+sy+'" r="'+3.5*P.scale+'" fill="'+Y+'"/>';}
+  else{const body=rot(bot.x,bot.y,bot.h,[[-10,-9],[10,-9],[10,9],[-10,9]]),cm=rot(bot.x,bot.y,bot.h,[[6,-3.5],[11,-3.5],[11,3.5],[6,3.5]]);
+   s+=solidSvg(extrude(body,2,9,P,{}),{tone:"hi",crease:"lo"})+solidSvg(extrude(cm,11,5,P,{}),{tone:"hi",lit:true});
+   for(let i=0;i<held;i++){const [sx,sy]=iso([bot.x,bot.y,14+i*4],P);s+='<circle cx="'+sx+'" cy="'+sy+'" r="'+2.4*P.scale+'" fill="'+Y+'"/>';}}
+ }
+ dyn.innerHTML=s;}
+function drawCam(){let s='<rect x="1" y="1" width="198" height="118" rx="4" fill="none" stroke="'+T+'" stroke-opacity=".5"/><line x1="1" y1="30" x2="199" y2="30" stroke="'+T+'" stroke-opacity=".3"/><line x1="100" y1="1" x2="100" y2="119" stroke="'+T+'" stroke-opacity=".15"/>';
+ for(const o of dets){const x=100+o.b/FOV*92,r=3+10*(1-o.d/RANGE),y=30+(1-o.d/RANGE)*78;s+='<rect x="'+(x-r-2)+'" y="'+(y-r-2)+'" width="'+(2*r+4)+'" height="'+(2*r+4)+'" fill="none" stroke="'+T+'" stroke-opacity=".7" stroke-dasharray="3 2"/><circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+Y+'"/><text x="'+x+'" y="'+(y-r-5)+'" font-size="7" text-anchor="middle" fill="'+T+'">'+o.d.toFixed(0)+' in</text>';}
+ s+='<text x="6" y="113" font-size="7" fill="'+T+'" fill-opacity=".6">'+dets.length+' in view</text>';cam.innerHTML=s;}
+const sc=160/F,mx=x=>x*sc,my=y=>(F-y)*sc;
+function drawMap(){let s='<rect x="0" y="0" width="160" height="160" fill="none" stroke="'+T+'" stroke-opacity=".5"/>';
+ for(let i=24;i<F;i+=24)s+='<path d="M'+mx(i)+' 0V160M0 '+my(i)+'H160" stroke="'+T+'" stroke-opacity=".12"/>';
+ s+='<rect x="'+mx(132)+'" y="'+my(90)+'" width="'+12*sc+'" height="'+36*sc+'" fill="'+T+'" fill-opacity=".2"/><circle cx="'+mx(SHOOT.x)+'" cy="'+my(SHOOT.y)+'" r="6" fill="none" stroke="'+T+'" stroke-dasharray="3 2" stroke-opacity=".6"/>';
+ const a0=bot.h-FOV,a1=bot.h+FOV;s+='<path d="M'+mx(bot.x)+' '+my(bot.y)+'L'+mx(bot.x+Math.cos(a0)*RANGE)+' '+my(bot.y+Math.sin(a0)*RANGE)+'L'+mx(bot.x+Math.cos(a1)*RANGE)+' '+my(bot.y+Math.sin(a1)*RANGE)+'Z" fill="'+T+'" fill-opacity=".07" stroke="'+T+'" stroke-opacity=".3"/>';
+ if(obsOn)for(const o of OBS)s+='<circle cx="'+mx(o.x)+'" cy="'+my(o.y)+'" r="'+o.r*sc+'" fill="'+T+'" fill-opacity=".4"/>';
+ if(mode==="auto")for(const z of zones)s+='<circle cx="'+mx(z.x)+'" cy="'+my(z.y)+'" r="'+14*sc+'" fill="none" stroke="'+T+'" stroke-opacity="'+0.15*Math.min(z.w,2.5)+'" stroke-dasharray="2 4"/>';
+ for(const [x,y] of truth)s+='<circle cx="'+mx(x)+'" cy="'+my(y)+'" r="2.2" fill="none" stroke="'+Y+'" stroke-opacity=".35" stroke-dasharray="1.5 1.5"/>';
+ if(st===1)for(const e of map)s+='<circle cx="'+mx(e.x)+'" cy="'+my(e.y)+'" r="'+MERGE*sc+'" fill="none" stroke="'+T+'" stroke-opacity=".4" stroke-dasharray="2 2"/>';
+ if(st>=2&&st<=5)for(const c of clusters)s+='<circle cx="'+mx(c.x)+'" cy="'+my(c.y)+'" r="'+c.r*sc+'" fill="'+T+'" fill-opacity=".06" stroke="'+T+'" stroke-opacity=".7" stroke-dasharray="4 3"/><text x="'+mx(c.x)+'" y="'+(my(c.y)-c.r*sc-3)+'" font-size="7" text-anchor="middle" fill="'+T+'">'+c.m.length+'</text>';
+ if(st>=4&&st<=5)s+='<path d="M'+chainPts(st===5?wp:route).map(p=>mx(p[0])+' '+my(p[1])).join('L')+'" fill="none" stroke="'+Y+'" stroke-width="1.4" stroke-dasharray="4 2"/>';
+ for(const e of map){const r=2.6+2.5/Math.sqrt(e.n);s+='<circle cx="'+mx(e.x)+'" cy="'+my(e.y)+'" r="'+r+'" fill="'+Y+'" fill-opacity="'+(mode==="auto"?(fresh(e)?0.95:0.25):0.9)+'"'+(pick.includes(e)&&st>=3?' stroke="'+T+'" stroke-width="1.4"':'')+'/>';}
+ if(st===0&&mode==="drag")s+='<circle cx="'+mx(bot.x)+'" cy="'+my(bot.y)+'" r="11" fill="'+T+'" fill-opacity=".08" stroke="'+T+'" stroke-dasharray="3 3"/>';
+ if(path&&(st===5||st===0)){s+='<path d="M'+pathPts(path).map(p=>mx(p[0])+' '+my(p[1])).join('L')+'" fill="none" stroke="'+Y+'" stroke-width="2"/><path d="M'+path.P.map(p=>mx(p.x)+' '+my(p.y)).join('L')+'" fill="none" stroke="'+T+'" stroke-opacity=".35" stroke-dasharray="2 2"/>';for(const c of path.P)s+='<rect x="'+(mx(c.x)-2)+'" y="'+(my(c.y)-2)+'" width="4" height="4" fill="none" stroke="'+T+'"/>';}
+ if(rivalOn)s+='<circle cx="'+mx(rival.x)+'" cy="'+my(rival.y)+'" r="'+22*sc+'" fill="none" stroke="'+T+'" stroke-opacity=".35" stroke-dasharray="2 3"/>';
+ if(rivalOn)s+='<rect x="'+(mx(rival.x)-5)+'" y="'+(my(rival.y)-5)+'" width="10" height="10" fill="none" stroke="'+T+'" stroke-width="1.5"/><text x="'+mx(rival.x)+'" y="'+(my(rival.y)+2.5)+'" font-size="7" text-anchor="middle" fill="'+T+'">R</text>';
+ s+='<path d="M'+rot(mx(bot.x),my(bot.y),-bot.h,[[7,0],[-5,-5],[-5,5]]).map(p=>p.join(' ')).join('L')+'Z" fill="'+T+'"/>';mp.innerHTML=s;}
+function ui(){steps.querySelectorAll("span").forEach(e=>e.dataset.on=(+e.dataset.i===st)?1:0);
+ let d=DESC[st];
+ if(mode==="auto"){if(st===0){d="No spin. The robot uses whatever is in its field of view right now. If nothing is, it drives toward the zone where balls usually are.";if(!truth.length)d+=" No balls left. Re-place or refill.";}if(st===1)d="Detections within 10 in merge. Anything not seen for half a second counts as stale and fades.";if(st===5)d="PedroPathing curves toward what the camera sees now. A nearer or extra ball in view builds a new path; lost balls drop out. Obstacles and the rival are avoided. Drag a ball to simulate interference.";}
+ else if(st===0){d=DESC[0]+" Drag a ball to move it.";if(!map.length)d+=truth.length?" Find a ball first.":" No balls left. Re-place or refill.";}
+ desc.textContent=d;ro.textContent=NAMES[st].toLowerCase()+" · "+map.length+" mapped · "+held+" held · "+bag+" in goal"+(mode==="auto"?" · "+replans+" replans":"");
+ const on=st===0&&mode==="drag",s0=st===0||mode==="auto";hd.disabled=!on;hd.style.opacity=on?1:.4;if(!on||document.activeElement!==hd)hd.value=Math.round(((bot.h*180/Math.PI)%360+360)%360);hv.textContent=hd.value+"°";
+ stage.style.touchAction=mp.style.touchAction=s0?"none":"auto";if(placing&&(bag<1||!s0))placing=false;
+ pl.disabled=!(s0&&bag>0);pl.textContent="Re-place balls ("+bag+")";pl.setAttribute("aria-pressed",placing?"true":"false");}
+let last=0;function tick(now){const dt=Math.min((now-last)/1000||0.016,1/20);last=now;if(!paused)step(dt);draw3d();drawCam();drawMap();ui();requestAnimationFrame(tick);}
+document.getElementById("pp").onclick=e=>{paused=!paused;e.target.textContent=paused?"Play":"Pause";};
+document.getElementById("nx").onclick=()=>{skip=true;paused=false;document.getElementById("pp").textContent="Pause";};
+const hd=document.getElementById("hd"),hv=document.getElementById("hv"),CM=cameraOf(P);
+hd.oninput=()=>{if(st===0&&mode==="drag")bot.h=hd.value*Math.PI/180;};
+function fromStage(e){const r=stage.querySelector("svg").getBoundingClientRect(),sx=(e.clientX-r.left)/r.width*640,sy=(e.clientY-r.top)/r.height*400,u=(sx-P.origin[0])/CM.k,v=(sy-P.origin[1])/(CM.k*CM.sinE);return[u*CM.sinA+v*CM.cosA,-u*CM.cosA+v*CM.sinA];}
+function fromMap(e){const r=mp.getBoundingClientRect();return[(e.clientX-r.left)/r.width*F,F-(e.clientY-r.top)/r.height*F];}
+let drag=null;
+const md=document.getElementById("md"),ma=document.getElementById("ma"),pl=document.getElementById("pl"),rf=document.getElementById("rf");
+const clampF=v=>Math.max(8,Math.min(F-8,v));
+const near=q=>{let b=null,bd=8;for(const t of truth){const d=Math.hypot(t[0]-q[0],t[1]-q[1]);if(d<bd){bd=d;b=t;}}return b;};
+function down(e,f,node){if(st!==0&&mode!=="auto")return;const q=f(e);
+ if(placing&&bag>0){const t=[clampF(q[0]),clampF(q[1])];truth.push(t);bag--;drag={ball:t};}
+ else{const b=near(q);if(b){const j=map.findIndex(m=>Math.hypot(m.x-b[0],m.y-b[1])<12);if(j>=0)map.splice(j,1);drag={ball:b};}else if(mode==="drag")drag={bot:1};else return;}
+ node.setPointerCapture(e.pointerId);move(e,f);}
+function move(e,f){if(!drag)return;const q=f(e),x=clampF(q[0]),y=clampF(q[1]);if(drag.ball){drag.ball[0]=x;drag.ball[1]=y;if(obsOn)for(const o of OBS){const dx=x-o.x,dy=y-o.y,d=Math.hypot(dx,dy)||1,m=o.r+18;if(d<m){drag.ball[0]=o.x+dx/d*m;drag.ball[1]=o.y+dy/d*m;}}}else{bot.x=x;bot.y=y;}}
+for(const [node,f] of [[stage,fromStage],[mp,fromMap]]){node.addEventListener("pointerdown",e=>down(e,f,node));node.addEventListener("pointermove",e=>move(e,f));node.addEventListener("pointerup",()=>{drag=null;});node.addEventListener("pointercancel",()=>{drag=null;});}
+function setMode(m){path=null;mode=m;sweep=0;scanT=0;searchT=0;wp=[];md.setAttribute("aria-pressed",m==="drag"?"true":"false");ma.setAttribute("aria-pressed",m==="auto"?"true":"false");}
+md.onclick=()=>setMode("drag");ma.onclick=()=>setMode("auto");
+const ob=document.getElementById("ob");ob.onclick=()=>{obsOn=!obsOn;ob.setAttribute("aria-pressed",obsOn?"true":"false");path=null;if(obsOn)for(let i=truth.length-1;i>=0;i--)if(!okp(truth[i])){truth.splice(i,1);addBall();}};
+const rv=document.getElementById("rv");rv.onclick=()=>{rivalOn=!rivalOn;rv.setAttribute("aria-pressed",rivalOn?"true":"false");if(rivalOn){rival.x=122;rival.y=122;rival.tgt=null;}};
+pl.onclick=()=>{placing=!placing&&bag>0;};
+rf.onclick=()=>{path=null;scanT=0;searchT=0;replans=0;spawn();map=[];clusters=[];pick=[];route=[];flying=[];wp=[];held=0;bag=0;placing=false;st=0;t=0;sweep=0;};
+reset();requestAnimationFrame(tick);
+</script></body></html>
