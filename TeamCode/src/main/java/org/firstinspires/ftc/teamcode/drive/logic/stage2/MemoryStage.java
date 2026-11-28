@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.logic.stage2;
+package org.firstinspires.ftc.teamcode.drive.logic.stage2;
 
 /**
  * STAGE 2 — Memory: Manages the temporal reliability of detected objects.

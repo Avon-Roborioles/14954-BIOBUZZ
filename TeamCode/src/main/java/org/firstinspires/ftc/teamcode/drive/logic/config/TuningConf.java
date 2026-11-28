@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.logic.config;
+package org.firstinspires.ftc.teamcode.drive.logic.config;
 
 /**
  * TuningConf centralizes all simulator and robot tuning parameters.

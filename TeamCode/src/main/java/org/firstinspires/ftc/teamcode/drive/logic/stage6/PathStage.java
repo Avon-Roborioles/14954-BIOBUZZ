@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.logic.stage6;
+package org.firstinspires.ftc.teamcode.drive.logic.stage6;
 
 /**
  * STAGE 6 — Pathing & Avoidance: Generates and executes smooth trajectory paths.

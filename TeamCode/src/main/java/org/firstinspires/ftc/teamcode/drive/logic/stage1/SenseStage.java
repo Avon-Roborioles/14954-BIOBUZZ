@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.logic.stage1;
+package org.firstinspires.ftc.teamcode.drive.logic.stage1;
 
 /**
  * STAGE 1 — Sense: Converts visual data into field coordinates.
